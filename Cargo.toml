@@ -1,11 +1,12 @@
 [package]
 name = "qbe"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 authors = ["Garrit Franke <garrit@slashdev.space>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/garritfra/qbe-rs"
 keywords = ["qbe", "compiler"]
+description = "QBE bindings for Rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
