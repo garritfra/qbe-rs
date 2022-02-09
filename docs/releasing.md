@@ -6,3 +6,4 @@
 1. Tag commit using `git tag -a <new release> -m "$(git shortlog <last release>..HEAD)"`
 1. Push the tag using `git push --tags`
 1. Publish package using `cargo publish`
+1. Create new GitHub Release
