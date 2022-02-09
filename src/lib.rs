@@ -9,6 +9,9 @@
 
 use std::fmt;
 
+#[cfg(test)]
+mod tests;
+
 /// QBE comparision
 #[derive(Debug)]
 pub enum QbeCmp {
