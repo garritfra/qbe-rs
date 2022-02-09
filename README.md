@@ -1,4 +1,6 @@
-# QBE bindings for Rust
+# QBE IR for Rust
+
+This crate seeks to provide a Rust-y representation of QBE IR.
 
 https://c9x.me/compile/
 
