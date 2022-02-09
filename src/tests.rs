@@ -25,7 +25,7 @@ fn qbe_value() {
 fn block() {
     let blk = QbeBlock {
         label: "start".into(),
-        instructions: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
+        statements: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
     };
 
     let formatted = format!("{}", blk);
@@ -35,7 +35,7 @@ fn block() {
 
     let blk = QbeBlock {
         label: "start".into(),
-        instructions: vec![
+        statements: vec![
             QbeStatement::Assign(
                 QbeValue::Temporary("foo".into()),
                 QbeType::Word,
@@ -61,7 +61,7 @@ fn function() {
         arguments: Vec::new(),
         blocks: vec![QbeBlock {
             label: "start".into(),
-            instructions: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
+            statements: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
         }],
     };
 

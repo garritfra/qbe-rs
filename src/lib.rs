@@ -236,7 +236,6 @@ pub struct QbeDataDef {
     pub exported: bool,
     pub name: String,
     pub align: Option<u64>,
-
     pub items: Vec<(QbeType, QbeDataItem)>,
 }
 
@@ -345,25 +344,25 @@ pub struct QbeBlock {
     /// Label before the block
     pub label: String,
 
-    /// A list of instructions in the block
-    pub instructions: Vec<QbeStatement>,
+    /// A list of statements in the block
+    pub statements: Vec<QbeStatement>,
 }
 
 impl QbeBlock {
     /// Adds a new instruction to the block
     pub fn add_instr(&mut self, instr: QbeInstr) {
-        self.instructions.push(QbeStatement::Volatile(instr));
+        self.statements.push(QbeStatement::Volatile(instr));
     }
 
     /// Adds a new instruction assigned to a temporary
     pub fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
-        self.instructions
+        self.statements
             .push(QbeStatement::Assign(temp, ty.into_base(), instr));
     }
 
     /// Returns true if the block's last instruction is a jump
     pub fn jumps(&self) -> bool {
-        let last = self.instructions.last();
+        let last = self.statements.last();
 
         if let Some(QbeStatement::Volatile(instr)) = last {
             matches!(
@@ -383,7 +382,7 @@ impl fmt::Display for QbeBlock {
         write!(
             f,
             "{}",
-            self.instructions
+            self.statements
                 .iter()
                 .map(|instr| format!("\t{}", instr))
                 .collect::<Vec<String>>()
@@ -416,7 +415,7 @@ impl QbeFunction {
     pub fn add_block(&mut self, label: String) {
         self.blocks.push(QbeBlock {
             label,
-            instructions: Vec::new(),
+            statements: Vec::new(),
         });
     }
 
