@@ -4,9 +4,18 @@
 [![docs](https://img.shields.io/badge/docs-docs.rs-blue.svg)](https://docs.rs/qbe)
 [![Crates.io](https://img.shields.io/crates/l/qbe)](https://github.com/garritfra/qbe-rs/blob/main/COPYRIGHT)
 
-This crate seeks to provide a Rust-y representation of QBE IR.
-
 https://c9x.me/compile/
+
+This crate seeks to provide a Rust-y representation of [QBE IR](https://c9x.me/compile/). It can be used
+for code generation of compilers. A way to parse existing IR is planned.
+
+## Getting Started
+
+This crate is on [crates.io](https://crates.io/crates/qbe), so you can simply
+add it as a dependency in your Cargo.toml and off you go.
+
+If you don't know where to get started, check out the `hello_world` example in
+the `examples/` directory.
 
 ## License
 
