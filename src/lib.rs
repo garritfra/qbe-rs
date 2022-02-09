@@ -63,7 +63,7 @@ pub enum QbeInstr {
     /// Allocates a 8-byte aligned area on the stack
     Alloc8(u64),
     /// Allocates a 16-byte aligned area on the stack
-    Alloc16(u64),
+    Alloc16(u128),
     /// Stores a value into memory pointed to by destination.
     /// `(type, destination, value)`
     Store(QbeType, QbeValue, QbeValue),
@@ -126,7 +126,7 @@ impl fmt::Display for QbeInstr {
             }
             Self::Alloc4(size) => write!(f, "alloc4 {}", size),
             Self::Alloc8(size) => write!(f, "alloc8 {}", size),
-            Self::Alloc16(size) => write!(f, "alloc8 {}", size),
+            Self::Alloc16(size) => write!(f, "alloc16 {}", size),
             Self::Store(ty, dest, value) => {
                 if matches!(ty, QbeType::Aggregate(_)) {
                     unimplemented!("Store to an aggregate type");
@@ -185,13 +185,11 @@ impl QbeType {
     /// Returns byte size for values of the type
     pub fn size(&self) -> u64 {
         match self {
-            Self::Word | Self::Single => 4,
-            Self::Long | Self::Double => 8,
             Self::Byte => 1,
             Self::Halfword => 2,
-
+            Self::Word | Self::Single => 4,
             // Aggregate types are syntactic sugar for pointers ;)
-            Self::Aggregate(_) => 8,
+            Self::Long | Self::Double | Self::Aggregate(_) => 8,
         }
     }
 }
@@ -199,14 +197,12 @@ impl QbeType {
 impl fmt::Display for QbeType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Byte => write!(f, "b"),
+            Self::Halfword => write!(f, "h"),
             Self::Word => write!(f, "w"),
             Self::Long => write!(f, "l"),
             Self::Single => write!(f, "s"),
             Self::Double => write!(f, "d"),
-
-            Self::Byte => write!(f, "b"),
-            Self::Halfword => write!(f, "h"),
-
             Self::Aggregate(name) => write!(f, ":{}", name),
         }
     }
