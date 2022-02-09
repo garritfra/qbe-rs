@@ -58,8 +58,12 @@ pub enum QbeInstr {
     Jmp(String),
     /// Calls a function
     Call(String, Vec<(QbeType, QbeValue)>),
+    /// Allocates a 4-byte aligned area on the stack
+    Alloc4(u32),
     /// Allocates a 8-byte aligned area on the stack
     Alloc8(u64),
+    /// Allocates a 16-byte aligned area on the stack
+    Alloc16(u64),
     /// Stores a value into memory pointed to by destination.
     /// `(type, destination, value)`
     Store(QbeType, QbeValue, QbeValue),
@@ -120,7 +124,9 @@ impl fmt::Display for QbeInstr {
                         .join(", "),
                 )
             }
+            Self::Alloc4(size) => write!(f, "alloc4 {}", size),
             Self::Alloc8(size) => write!(f, "alloc8 {}", size),
+            Self::Alloc16(size) => write!(f, "alloc8 {}", size),
             Self::Store(ty, dest, value) => {
                 if matches!(ty, QbeType::Aggregate(_)) {
                     unimplemented!("Store to an aggregate type");
