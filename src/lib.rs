@@ -13,7 +13,7 @@ use std::fmt;
 mod tests;
 
 /// QBE comparision
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Copy)]
 pub enum Cmp {
     /// Returns 1 if first value is less than second, respecting signedness
     Slt,
@@ -229,7 +229,7 @@ impl fmt::Display for Value {
 }
 
 /// QBE data definition
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct DataDef {
     pub exported: bool,
     pub name: String,
@@ -285,7 +285,7 @@ impl fmt::Display for DataItem {
 }
 
 /// QBE aggregate type definition
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct TypeDef {
     pub name: String,
     pub align: Option<u64>,
@@ -336,7 +336,7 @@ impl fmt::Display for Statement {
 }
 
 /// Function block with a label
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Block {
     /// Label before the block
     pub label: String,
@@ -386,7 +386,7 @@ impl fmt::Display for Block {
 }
 
 /// QBE function
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Function {
     /// Should the function be available to outside users
     pub exported: bool,
