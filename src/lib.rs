@@ -13,7 +13,7 @@ use std::fmt;
 mod tests;
 
 /// QBE comparision
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Cmp {
     /// Returns 1 if first value is less than second, respecting signedness
     Slt,
@@ -30,7 +30,7 @@ pub enum Cmp {
 }
 
 /// QBE instruction
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Instr {
     /// Adds values of two temporaries together
     Add(Value, Value),
@@ -146,8 +146,7 @@ impl fmt::Display for Instr {
 }
 
 /// QBE type
-#[derive(Debug, Eq, PartialEq, Clone)]
-#[allow(dead_code)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Type {
     // Base types
     Word,
@@ -209,8 +208,7 @@ impl fmt::Display for Type {
 }
 
 /// QBE value that is accepted by instructions
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Value {
     /// `%`-temporary
     Temporary(String),
@@ -231,7 +229,7 @@ impl fmt::Display for Value {
 }
 
 /// QBE data definition
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct DataDef {
     pub exported: bool,
     pub name: String,
@@ -263,8 +261,7 @@ impl fmt::Display for DataDef {
 }
 
 /// Data definition item
-#[derive(Debug)]
-#[allow(dead_code)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum DataItem {
     /// Symbol and offset
     Symbol(String, Option<u64>),
@@ -288,7 +285,7 @@ impl fmt::Display for DataItem {
 }
 
 /// QBE aggregate type definition
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct TypeDef {
     pub name: String,
     pub align: Option<u64>,
@@ -320,7 +317,7 @@ impl fmt::Display for TypeDef {
 }
 
 /// An IR statement
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Statement {
     Assign(Value, Type, Instr),
     Volatile(Instr),
@@ -339,7 +336,7 @@ impl fmt::Display for Statement {
 }
 
 /// Function block with a label
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Block {
     /// Label before the block
     pub label: String,
@@ -365,10 +362,7 @@ impl Block {
         let last = self.statements.last();
 
         if let Some(Statement::Volatile(instr)) = last {
-            matches!(
-                instr,
-                Instr::Ret(_) | Instr::Jmp(_) | Instr::Jnz(..)
-            )
+            matches!(instr, Instr::Ret(_) | Instr::Jmp(_) | Instr::Jnz(..))
         } else {
             false
         }
@@ -392,7 +386,7 @@ impl fmt::Display for Block {
 }
 
 /// QBE function
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Function {
     /// Should the function be available to outside users
     pub exported: bool,
