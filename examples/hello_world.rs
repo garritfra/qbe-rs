@@ -2,93 +2,93 @@ use qbe::*;
 
 // Represents the hello world example from https://c9x.me/compile/
 
-fn generate_add_func() -> QbeFunction {
+fn generate_add_func() -> Function {
     let arguments = vec![
-        (QbeType::Word, QbeValue::Temporary("a".into())),
-        (QbeType::Word, QbeValue::Temporary("b".into())),
+        (Type::Word, Value::Temporary("a".into())),
+        (Type::Word, Value::Temporary("b".into())),
     ];
 
     let mut statements = Vec::new();
 
-    statements.push(QbeStatement::Assign(
-        QbeValue::Temporary("c".into()),
-        QbeType::Word,
-        QbeInstr::Add(
-            QbeValue::Temporary("a".into()),
-            QbeValue::Temporary("b".into()),
+    statements.push(Statement::Assign(
+        Value::Temporary("c".into()),
+        Type::Word,
+        Instr::Add(
+            Value::Temporary("a".into()),
+            Value::Temporary("b".into()),
         ),
     ));
 
-    statements.push(QbeStatement::Volatile(QbeInstr::Ret(Some(
-        QbeValue::Temporary("c".into()),
+    statements.push(Statement::Volatile(Instr::Ret(Some(
+        Value::Temporary("c".into()),
     ))));
 
-    let blocks = vec![QbeBlock {
+    let blocks = vec![Block {
         label: "start".into(),
         statements,
     }];
 
-    QbeFunction {
+    Function {
         exported: false,
         name: "add".into(),
-        return_ty: Some(QbeType::Word),
+        return_ty: Some(Type::Word),
         arguments,
         blocks,
     }
 }
 
-fn generate_main_func() -> QbeFunction {
+fn generate_main_func() -> Function {
     let mut statements = Vec::new();
 
-    statements.push(QbeStatement::Assign(
-        QbeValue::Temporary("r".into()),
-        QbeType::Word,
-        QbeInstr::Call(
+    statements.push(Statement::Assign(
+        Value::Temporary("r".into()),
+        Type::Word,
+        Instr::Call(
             "add".into(),
             vec![
-                (QbeType::Word, QbeValue::Const(1)),
-                (QbeType::Word, QbeValue::Const(1)),
+                (Type::Word, Value::Const(1)),
+                (Type::Word, Value::Const(1)),
             ],
         ),
     ));
 
     // TODO: The example shows a variadic call. We don't have those yet
 
-    statements.push(QbeStatement::Volatile(QbeInstr::Call(
+    statements.push(Statement::Volatile(Instr::Call(
         "printf".into(),
         vec![
-            (QbeType::Long, QbeValue::Global("fmt".into())),
-            (QbeType::Word, QbeValue::Temporary("r".into())),
+            (Type::Long, Value::Global("fmt".into())),
+            (Type::Word, Value::Temporary("r".into())),
         ],
     )));
 
-    statements.push(QbeStatement::Volatile(QbeInstr::Ret(Some(
-        QbeValue::Const(0),
+    statements.push(Statement::Volatile(Instr::Ret(Some(
+        Value::Const(0),
     ))));
 
-    let blocks = vec![QbeBlock {
+    let blocks = vec![Block {
         label: "start".into(),
         statements,
     }];
 
-    QbeFunction {
+    Function {
         exported: true,
         name: "main".into(),
-        return_ty: Some(QbeType::Word),
+        return_ty: Some(Type::Word),
         arguments: Vec::new(),
         blocks,
     }
 }
 
-fn generate_data() -> QbeDataDef {
+fn generate_data() -> DataDef {
     let items = vec![
         (
-            QbeType::Byte,
-            QbeDataItem::Str("One and one make %d!\\n".into()),
+            Type::Byte,
+            DataItem::Str("One and one make %d!\\n".into()),
         ),
-        (QbeType::Byte, QbeDataItem::Const(0)),
+        (Type::Byte, DataItem::Const(0)),
     ];
-    QbeDataDef {
+    DataDef {
         exported: false,
         name: "fmt".into(),
         align: None,

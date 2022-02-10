@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Changed
+
+-   Remove `Qbe` prefix from data structures. `QbeValue` becomes `qbe::Value`
 
 ## [0.1.0] - 2022-02-09
 

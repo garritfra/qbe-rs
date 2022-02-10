@@ -14,7 +14,7 @@ mod tests;
 
 /// QBE comparision
 #[derive(Debug)]
-pub enum QbeCmp {
+pub enum Cmp {
     /// Returns 1 if first value is less than second, respecting signedness
     Slt,
     /// Returns 1 if first value is less than or equal to second, respecting signedness
@@ -31,33 +31,33 @@ pub enum QbeCmp {
 
 /// QBE instruction
 #[derive(Debug)]
-pub enum QbeInstr {
+pub enum Instr {
     /// Adds values of two temporaries together
-    Add(QbeValue, QbeValue),
+    Add(Value, Value),
     /// Subtracts the second value from the first one
-    Sub(QbeValue, QbeValue),
+    Sub(Value, Value),
     /// Multiplies values of two temporaries
-    Mul(QbeValue, QbeValue),
+    Mul(Value, Value),
     /// Divides the first value by the second one
-    Div(QbeValue, QbeValue),
+    Div(Value, Value),
     /// Returns a remainder from division
-    Rem(QbeValue, QbeValue),
+    Rem(Value, Value),
     /// Performs a comparion between values
-    Cmp(QbeType, QbeCmp, QbeValue, QbeValue),
+    Cmp(Type, Cmp, Value, Value),
     /// Performs a bitwise AND on values
-    And(QbeValue, QbeValue),
+    And(Value, Value),
     /// Performs a bitwise OR on values
-    Or(QbeValue, QbeValue),
+    Or(Value, Value),
     /// Copies either a temporary or a literal value
-    Copy(QbeValue),
+    Copy(Value),
     /// Return from a function, optionally with a value
-    Ret(Option<QbeValue>),
+    Ret(Option<Value>),
     /// Jumps to first label if a value is nonzero or to the second one otherwise
-    Jnz(QbeValue, String, String),
+    Jnz(Value, String, String),
     /// Unconditionally jumps to a label
     Jmp(String),
     /// Calls a function
-    Call(String, Vec<(QbeType, QbeValue)>),
+    Call(String, Vec<(Type, Value)>),
     /// Allocates a 4-byte aligned area on the stack
     Alloc4(u32),
     /// Allocates a 8-byte aligned area on the stack
@@ -66,13 +66,13 @@ pub enum QbeInstr {
     Alloc16(u128),
     /// Stores a value into memory pointed to by destination.
     /// `(type, destination, value)`
-    Store(QbeType, QbeValue, QbeValue),
+    Store(Type, Value, Value),
     /// Loads a value from memory pointed to by source
     /// `(type, source)`
-    Load(QbeType, QbeValue),
+    Load(Type, Value),
 }
 
-impl fmt::Display for QbeInstr {
+impl fmt::Display for Instr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Add(lhs, rhs) => write!(f, "add {}, {}", lhs, rhs),
@@ -82,7 +82,7 @@ impl fmt::Display for QbeInstr {
             Self::Rem(lhs, rhs) => write!(f, "rem {}, {}", lhs, rhs),
             Self::Cmp(ty, cmp, lhs, rhs) => {
                 assert!(
-                    !matches!(ty, QbeType::Aggregate(_)),
+                    !matches!(ty, Type::Aggregate(_)),
                     "Cannot compare aggregate types"
                 );
 
@@ -90,12 +90,12 @@ impl fmt::Display for QbeInstr {
                     f,
                     "c{}{} {}, {}",
                     match cmp {
-                        QbeCmp::Slt => "slt",
-                        QbeCmp::Sle => "sle",
-                        QbeCmp::Sgt => "sgt",
-                        QbeCmp::Sge => "sge",
-                        QbeCmp::Eq => "eq",
-                        QbeCmp::Ne => "ne",
+                        Cmp::Slt => "slt",
+                        Cmp::Sle => "sle",
+                        Cmp::Sgt => "sgt",
+                        Cmp::Sge => "sge",
+                        Cmp::Eq => "eq",
+                        Cmp::Ne => "ne",
                     },
                     ty,
                     lhs,
@@ -128,14 +128,14 @@ impl fmt::Display for QbeInstr {
             Self::Alloc8(size) => write!(f, "alloc8 {}", size),
             Self::Alloc16(size) => write!(f, "alloc16 {}", size),
             Self::Store(ty, dest, value) => {
-                if matches!(ty, QbeType::Aggregate(_)) {
+                if matches!(ty, Type::Aggregate(_)) {
                     unimplemented!("Store to an aggregate type");
                 }
 
                 write!(f, "store{} {}, {}", ty, value, dest)
             }
             Self::Load(ty, src) => {
-                if matches!(ty, QbeType::Aggregate(_)) {
+                if matches!(ty, Type::Aggregate(_)) {
                     unimplemented!("Load aggregate type");
                 }
 
@@ -148,7 +148,7 @@ impl fmt::Display for QbeInstr {
 /// QBE type
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[allow(dead_code)]
-pub enum QbeType {
+pub enum Type {
     // Base types
     Word,
     Long,
@@ -163,7 +163,7 @@ pub enum QbeType {
     Aggregate(String),
 }
 
-impl QbeType {
+impl Type {
     /// Returns a C ABI type. Extended types are converted to closest base
     /// types
     pub fn into_abi(self) -> Self {
@@ -194,7 +194,7 @@ impl QbeType {
     }
 }
 
-impl fmt::Display for QbeType {
+impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Byte => write!(f, "b"),
@@ -211,7 +211,7 @@ impl fmt::Display for QbeType {
 /// QBE value that is accepted by instructions
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-pub enum QbeValue {
+pub enum Value {
     /// `%`-temporary
     Temporary(String),
     /// `$`-global
@@ -220,7 +220,7 @@ pub enum QbeValue {
     Const(u64),
 }
 
-impl fmt::Display for QbeValue {
+impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Temporary(name) => write!(f, "%{}", name),
@@ -232,14 +232,14 @@ impl fmt::Display for QbeValue {
 
 /// QBE data definition
 #[derive(Debug)]
-pub struct QbeDataDef {
+pub struct DataDef {
     pub exported: bool,
     pub name: String,
     pub align: Option<u64>,
-    pub items: Vec<(QbeType, QbeDataItem)>,
+    pub items: Vec<(Type, DataItem)>,
 }
 
-impl fmt::Display for QbeDataDef {
+impl fmt::Display for DataDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.exported {
             write!(f, "export ")?;
@@ -265,7 +265,7 @@ impl fmt::Display for QbeDataDef {
 /// Data definition item
 #[derive(Debug)]
 #[allow(dead_code)]
-pub enum QbeDataItem {
+pub enum DataItem {
     /// Symbol and offset
     Symbol(String, Option<u64>),
     /// String
@@ -274,7 +274,7 @@ pub enum QbeDataItem {
     Const(u64),
 }
 
-impl fmt::Display for QbeDataItem {
+impl fmt::Display for DataItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Symbol(name, offset) => match offset {
@@ -289,14 +289,14 @@ impl fmt::Display for QbeDataItem {
 
 /// QBE aggregate type definition
 #[derive(Debug)]
-pub struct QbeTypeDef {
+pub struct TypeDef {
     pub name: String,
     pub align: Option<u64>,
     // TODO: Opaque types?
-    pub items: Vec<(QbeType, usize)>,
+    pub items: Vec<(Type, usize)>,
 }
 
-impl fmt::Display for QbeTypeDef {
+impl fmt::Display for TypeDef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "type :{} = ", self.name)?;
         if let Some(align) = self.align {
@@ -321,16 +321,16 @@ impl fmt::Display for QbeTypeDef {
 
 /// An IR statement
 #[derive(Debug)]
-pub enum QbeStatement {
-    Assign(QbeValue, QbeType, QbeInstr),
-    Volatile(QbeInstr),
+pub enum Statement {
+    Assign(Value, Type, Instr),
+    Volatile(Instr),
 }
 
-impl fmt::Display for QbeStatement {
+impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Assign(temp, ty, instr) => {
-                assert!(matches!(temp, QbeValue::Temporary(_)));
+                assert!(matches!(temp, Value::Temporary(_)));
                 write!(f, "{} ={} {}", temp, ty, instr)
             }
             Self::Volatile(instr) => write!(f, "{}", instr),
@@ -340,34 +340,34 @@ impl fmt::Display for QbeStatement {
 
 /// Function block with a label
 #[derive(Debug)]
-pub struct QbeBlock {
+pub struct Block {
     /// Label before the block
     pub label: String,
 
     /// A list of statements in the block
-    pub statements: Vec<QbeStatement>,
+    pub statements: Vec<Statement>,
 }
 
-impl QbeBlock {
+impl Block {
     /// Adds a new instruction to the block
-    pub fn add_instr(&mut self, instr: QbeInstr) {
-        self.statements.push(QbeStatement::Volatile(instr));
+    pub fn add_instr(&mut self, instr: Instr) {
+        self.statements.push(Statement::Volatile(instr));
     }
 
     /// Adds a new instruction assigned to a temporary
-    pub fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
+    pub fn assign_instr(&mut self, temp: Value, ty: Type, instr: Instr) {
         self.statements
-            .push(QbeStatement::Assign(temp, ty.into_base(), instr));
+            .push(Statement::Assign(temp, ty.into_base(), instr));
     }
 
     /// Returns true if the block's last instruction is a jump
     pub fn jumps(&self) -> bool {
         let last = self.statements.last();
 
-        if let Some(QbeStatement::Volatile(instr)) = last {
+        if let Some(Statement::Volatile(instr)) = last {
             matches!(
                 instr,
-                QbeInstr::Ret(_) | QbeInstr::Jmp(_) | QbeInstr::Jnz(..)
+                Instr::Ret(_) | Instr::Jmp(_) | Instr::Jnz(..)
             )
         } else {
             false
@@ -375,7 +375,7 @@ impl QbeBlock {
     }
 }
 
-impl fmt::Display for QbeBlock {
+impl fmt::Display for Block {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "@{}", self.label)?;
 
@@ -393,7 +393,7 @@ impl fmt::Display for QbeBlock {
 
 /// QBE function
 #[derive(Debug)]
-pub struct QbeFunction {
+pub struct Function {
     /// Should the function be available to outside users
     pub exported: bool,
 
@@ -401,32 +401,32 @@ pub struct QbeFunction {
     pub name: String,
 
     /// Function arguments
-    pub arguments: Vec<(QbeType, QbeValue)>,
+    pub arguments: Vec<(Type, Value)>,
 
     /// Return type
-    pub return_ty: Option<QbeType>,
+    pub return_ty: Option<Type>,
 
     /// Labelled blocks
-    pub blocks: Vec<QbeBlock>,
+    pub blocks: Vec<Block>,
 }
 
-impl QbeFunction {
+impl Function {
     /// Adds a new empty block with a specified label
     pub fn add_block(&mut self, label: String) {
-        self.blocks.push(QbeBlock {
+        self.blocks.push(Block {
             label,
             statements: Vec::new(),
         });
     }
 
-    pub fn last_block(&mut self) -> &QbeBlock {
+    pub fn last_block(&mut self) -> &Block {
         self.blocks
             .last()
             .expect("Function must have at least one block")
     }
 
     /// Adds a new instruction to the last block
-    pub fn add_instr(&mut self, instr: QbeInstr) {
+    pub fn add_instr(&mut self, instr: Instr) {
         self.blocks
             .last_mut()
             .expect("Last block must be present")
@@ -434,7 +434,7 @@ impl QbeFunction {
     }
 
     /// Adds a new instruction assigned to a temporary
-    pub fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
+    pub fn assign_instr(&mut self, temp: Value, ty: Type, instr: Instr) {
         self.blocks
             .last_mut()
             .expect("Last block must be present")
@@ -442,7 +442,7 @@ impl QbeFunction {
     }
 }
 
-impl fmt::Display for QbeFunction {
+impl fmt::Display for Function {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.exported {
             write!(f, "export ")?;

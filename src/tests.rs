@@ -11,21 +11,21 @@ use crate::*;
 
 #[test]
 fn qbe_value() {
-    let val = QbeValue::Temporary("temp42".into());
+    let val = Value::Temporary("temp42".into());
     assert_eq!(format!("{}", val), "%temp42");
 
-    let val = QbeValue::Global("main".into());
+    let val = Value::Global("main".into());
     assert_eq!(format!("{}", val), "$main");
 
-    let val = QbeValue::Const(1337);
+    let val = Value::Const(1337);
     assert_eq!(format!("{}", val), "1337");
 }
 
 #[test]
 fn block() {
-    let blk = QbeBlock {
+    let blk = Block {
         label: "start".into(),
-        statements: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
+        statements: vec![Statement::Volatile(Instr::Ret(None))],
     };
 
     let formatted = format!("{}", blk);
@@ -33,15 +33,15 @@ fn block() {
     assert_eq!(lines.next().unwrap(), "@start");
     assert_eq!(lines.next().unwrap(), "\tret");
 
-    let blk = QbeBlock {
+    let blk = Block {
         label: "start".into(),
         statements: vec![
-            QbeStatement::Assign(
-                QbeValue::Temporary("foo".into()),
-                QbeType::Word,
-                QbeInstr::Add(QbeValue::Const(2), QbeValue::Const(2)),
+            Statement::Assign(
+                Value::Temporary("foo".into()),
+                Type::Word,
+                Instr::Add(Value::Const(2), Value::Const(2)),
             ),
-            QbeStatement::Volatile(QbeInstr::Ret(Some(QbeValue::Temporary("foo".into())))),
+            Statement::Volatile(Instr::Ret(Some(Value::Temporary("foo".into())))),
         ],
     };
 
@@ -54,14 +54,14 @@ fn block() {
 
 #[test]
 fn function() {
-    let func = QbeFunction {
+    let func = Function {
         exported: true,
         return_ty: None,
         name: "main".into(),
         arguments: Vec::new(),
-        blocks: vec![QbeBlock {
+        blocks: vec![Block {
             label: "start".into(),
-            statements: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
+            statements: vec![Statement::Volatile(Instr::Ret(None))],
         }],
     };
 
@@ -75,13 +75,13 @@ fn function() {
 
 #[test]
 fn datadef() {
-    let datadef = QbeDataDef {
+    let datadef = DataDef {
         exported: true,
         name: "hello".into(),
         align: None,
         items: vec![
-            (QbeType::Byte, QbeDataItem::Str("Hello, World!".into())),
-            (QbeType::Byte, QbeDataItem::Const(0)),
+            (Type::Byte, DataItem::Str("Hello, World!".into())),
+            (Type::Byte, DataItem::Const(0)),
         ],
     };
 
@@ -94,10 +94,10 @@ fn datadef() {
 
 #[test]
 fn typedef() {
-    let typedef = QbeTypeDef {
+    let typedef = TypeDef {
         name: "person".into(),
         align: None,
-        items: vec![(QbeType::Long, 1), (QbeType::Word, 2), (QbeType::Byte, 1)],
+        items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
 
     let formatted = format!("{}", typedef);
@@ -107,29 +107,29 @@ fn typedef() {
 #[test]
 fn type_into_abi() {
     // Base types and aggregates should stay unchanged
-    let unchanged = |ty: QbeType| assert_eq!(ty.clone().into_abi(), ty);
-    unchanged(QbeType::Word);
-    unchanged(QbeType::Long);
-    unchanged(QbeType::Single);
-    unchanged(QbeType::Double);
-    unchanged(QbeType::Aggregate("foo".into()));
+    let unchanged = |ty: Type| assert_eq!(ty.clone().into_abi(), ty);
+    unchanged(Type::Word);
+    unchanged(Type::Long);
+    unchanged(Type::Single);
+    unchanged(Type::Double);
+    unchanged(Type::Aggregate("foo".into()));
 
     // Extended types are transformed into closest base types
-    assert_eq!(QbeType::Byte.into_abi(), QbeType::Word);
-    assert_eq!(QbeType::Halfword.into_abi(), QbeType::Word);
+    assert_eq!(Type::Byte.into_abi(), Type::Word);
+    assert_eq!(Type::Halfword.into_abi(), Type::Word);
 }
 
 #[test]
 fn type_into_base() {
     // Base types should stay unchanged
-    let unchanged = |ty: QbeType| assert_eq!(ty.clone().into_base(), ty);
-    unchanged(QbeType::Word);
-    unchanged(QbeType::Long);
-    unchanged(QbeType::Single);
-    unchanged(QbeType::Double);
+    let unchanged = |ty: Type| assert_eq!(ty.clone().into_base(), ty);
+    unchanged(Type::Word);
+    unchanged(Type::Long);
+    unchanged(Type::Single);
+    unchanged(Type::Double);
 
     // Extended and aggregate types are transformed into closest base types
-    assert_eq!(QbeType::Byte.into_base(), QbeType::Word);
-    assert_eq!(QbeType::Halfword.into_base(), QbeType::Word);
-    assert_eq!(QbeType::Aggregate("foo".into()).into_base(), QbeType::Long);
+    assert_eq!(Type::Byte.into_base(), Type::Word);
+    assert_eq!(Type::Halfword.into_base(), Type::Word);
+    assert_eq!(Type::Aggregate("foo".into()).into_base(), Type::Long);
 }
