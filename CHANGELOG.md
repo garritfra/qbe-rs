@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Data types now implement common traits (`Debug`, `Clone`, `Eq`, `PartialEq`,
-`Ord`, `PartialOrd`, `Hash`, `Default` and `Copy` ) where applicable
+-   Data types now implement common traits (`Debug`, `Clone`, `Eq`, `PartialEq`,
+    `Ord`, `PartialOrd`, `Hash`, `Default` and `Copy` ) where applicable
 
 ### Changed
 
