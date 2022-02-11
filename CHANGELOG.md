@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+xxx
+
+## [1.0.0] - 2020-02-11
+
 ### Added
 
 -   Data types now implement common traits (`Debug`, `Clone`, `Eq`, `PartialEq`,
