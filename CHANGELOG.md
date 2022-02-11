@@ -11,7 +11,7 @@ xxx
 ### Added
 
 -   Data types now implement common traits (`Debug`, `Clone`, `Eq`, `PartialEq`,
-    `Ord`, `PartialOrd`, `Hash`, `Default` and `Copy` ) where applicable
+    `Ord`, `PartialOrd`, `Hash`, `Default` and `Copy`) where applicable
 -   Added `Linkage` data type (see [`Linkage`](https://c9x.me/compile/doc/il.html#Linkage))
 -   Added a `Module` data type that houses functions and data definitions
 
