@@ -8,4 +8,4 @@
 
 ---
 
--   [x] `Module` data type (#2)
+-   [x] `Module` data type ([#2](https://github.com/garritfra/qbe-rs/pull/2))
