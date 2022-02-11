@@ -55,7 +55,7 @@ fn block() {
 #[test]
 fn function() {
     let func = Function {
-        exported: true,
+        linkage: Linkage::public(),
         return_ty: None,
         name: "main".into(),
         arguments: Vec::new(),
@@ -76,7 +76,7 @@ fn function() {
 #[test]
 fn datadef() {
     let datadef = DataDef {
-        exported: true,
+        linkage: Linkage::public(),
         name: "hello".into(),
         align: None,
         items: vec![

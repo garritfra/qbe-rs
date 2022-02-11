@@ -4,6 +4,7 @@ use qbe::*;
 
 fn generate_add_func(module: &mut Module) {
     let func = module.add_function(
+        Linkage::private(),
         "add".into(),
         vec![
             (Type::Word, Value::Temporary("a".into())),
@@ -22,7 +23,7 @@ fn generate_add_func(module: &mut Module) {
 }
 
 fn generate_main_func(module: &mut Module) {
-    let func = module.add_function("main".into(), vec![], Some(Type::Word));
+    let func = module.add_function(Linkage::public(), "main".into(), vec![], Some(Type::Word));
 
     func.add_block("start".into());
     func.assign_instr(
@@ -49,7 +50,7 @@ fn generate_data(module: &mut Module) {
         (Type::Byte, DataItem::Str("One and one make %d!\\n".into())),
         (Type::Byte, DataItem::Const(0)),
     ];
-    module.add_data("fmt".into(), None, items);
+    module.add_data(Linkage::private(), "fmt".into(), None, items);
 }
 
 fn main() {
