@@ -2,86 +2,60 @@ use qbe::*;
 
 // Represents the hello world example from https://c9x.me/compile/
 
-fn generate_add_func() -> Function {
-    let arguments = vec![
-        (Type::Word, Value::Temporary("a".into())),
-        (Type::Word, Value::Temporary("b".into())),
-    ];
+fn generate_add_func(module: &mut Module) {
+    let func = module.add_function(
+        "add".into(),
+        vec![
+            (Type::Word, Value::Temporary("a".into())),
+            (Type::Word, Value::Temporary("b".into())),
+        ],
+        Some(Type::Word),
+    );
 
-    let statements = vec![
-        Statement::Assign(
-            Value::Temporary("c".into()),
-            Type::Word,
-            Instr::Add(Value::Temporary("a".into()), Value::Temporary("b".into())),
-        ),
-        Statement::Volatile(Instr::Ret(Some(Value::Temporary("c".into())))),
-    ];
-
-    let blocks = vec![Block {
-        label: "start".into(),
-        statements,
-    }];
-
-    Function {
-        exported: false,
-        name: "add".into(),
-        return_ty: Some(Type::Word),
-        arguments,
-        blocks,
-    }
+    func.add_block("start".into());
+    func.assign_instr(
+        Value::Temporary("c".into()),
+        Type::Word,
+        Instr::Add(Value::Temporary("a".into()), Value::Temporary("b".into())),
+    );
+    func.add_instr(Instr::Ret(Some(Value::Temporary("c".into()))));
 }
 
-fn generate_main_func() -> Function {
-    let statements = vec![
-        Statement::Assign(
-            Value::Temporary("r".into()),
-            Type::Word,
-            Instr::Call(
-                "add".into(),
-                vec![(Type::Word, Value::Const(1)), (Type::Word, Value::Const(1))],
-            ),
-        ),
-        Statement::Volatile(Instr::Call(
-            "printf".into(),
-            vec![
-                (Type::Long, Value::Global("fmt".into())),
-                (Type::Word, Value::Temporary("r".into())),
-            ],
-        )),
-        Statement::Volatile(Instr::Ret(Some(Value::Const(0)))),
-    ];
+fn generate_main_func(module: &mut Module) {
+    let func = module.add_function("main".into(), vec![], Some(Type::Word));
 
+    func.add_block("start".into());
+    func.assign_instr(
+        Value::Temporary("r".into()),
+        Type::Word,
+        Instr::Call(
+            "add".into(),
+            vec![(Type::Word, Value::Const(1)), (Type::Word, Value::Const(1))],
+        ),
+    );
     // TODO: The example shows a variadic call. We don't have those yet
-
-    let blocks = vec![Block {
-        label: "start".into(),
-        statements,
-    }];
-
-    Function {
-        exported: true,
-        name: "main".into(),
-        return_ty: Some(Type::Word),
-        arguments: Vec::new(),
-        blocks,
-    }
+    func.add_instr(Instr::Call(
+        "printf".into(),
+        vec![
+            (Type::Long, Value::Global("fmt".into())),
+            (Type::Word, Value::Temporary("r".into())),
+        ],
+    ));
+    func.add_instr(Instr::Ret(Some(Value::Const(0))));
 }
 
-fn generate_data() -> DataDef {
+fn generate_data(module: &mut Module) {
     let items = vec![
         (Type::Byte, DataItem::Str("One and one make %d!\\n".into())),
         (Type::Byte, DataItem::Const(0)),
     ];
-    DataDef {
-        exported: false,
-        name: "fmt".into(),
-        align: None,
-        items,
-    }
+    module.add_data("fmt".into(), None, items);
 }
 
 fn main() {
-    println!("{}", generate_add_func());
-    println!("{}", generate_main_func());
-    println!("{}", generate_data());
+    let mut module = Module::new();
+    generate_add_func(&mut module);
+    generate_main_func(&mut module);
+    generate_data(&mut module);
+    println!("{}", module);
 }

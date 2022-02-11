@@ -405,7 +405,7 @@ pub struct Function {
 }
 
 impl Function {
-    /// Adds a new empty block with a specified label
+    /// Adds a new empty block with a specified label and returns it
     pub fn add_block(&mut self, label: String) {
         self.blocks.push(Block {
             label,
@@ -463,5 +463,73 @@ impl fmt::Display for Function {
         }
 
         write!(f, "}}")
+    }
+}
+
+/// A complete IL file
+pub struct Module {
+    functions: Vec<Function>,
+    types: Vec<TypeDef>,
+    data: Vec<DataDef>,
+}
+
+impl Module {
+    /// Creates a new module
+    pub fn new() -> Module {
+        Module {
+            functions: Vec::new(),
+            types: Vec::new(),
+            data: Vec::new(),
+        }
+    }
+
+    /// Adds a function to the module, returning a reference to it for later
+    /// modification
+    pub fn add_function(
+        &mut self,
+        name: String,
+        arguments: Vec<(Type, Value)>,
+        return_ty: Option<Type>,
+    ) -> &mut Function {
+        // TODO: Linkage
+        self.functions.push(Function {
+            exported: true,
+            name,
+            arguments,
+            return_ty,
+            blocks: Vec::new(),
+        });
+        return self.functions.last_mut().unwrap();
+    }
+
+    /// Adds a type definition to the module
+    pub fn add_type(&mut self, name: String, align: Option<u64>, items: Vec<(Type, usize)>) {
+        self.types.push(TypeDef { name, align, items });
+    }
+
+    /// Adds a data definition to the module
+    pub fn add_data(&mut self, name: String, align: Option<u64>, items: Vec<(Type, DataItem)>) {
+        // TODO: Linkage
+        self.data.push(DataDef {
+            exported: true,
+            name,
+            align,
+            items,
+        });
+    }
+}
+
+impl fmt::Display for Module {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for func in self.functions.iter() {
+            writeln!(f, "{}", func)?;
+        }
+        for ty in self.types.iter() {
+            writeln!(f, "{}", ty)?;
+        }
+        for data in self.data.iter() {
+            writeln!(f, "{}", data)?;
+        }
+        Ok(())
     }
 }
