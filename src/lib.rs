@@ -231,7 +231,7 @@ impl fmt::Display for Value {
 /// QBE data definition
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct DataDef {
-    pub exported: bool,
+    pub linkage: Linkage,
     pub name: String,
     pub align: Option<u64>,
     pub items: Vec<(Type, DataItem)>,
@@ -239,11 +239,7 @@ pub struct DataDef {
 
 impl fmt::Display for DataDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.exported {
-            write!(f, "export ")?;
-        }
-
-        write!(f, "data ${} = ", self.name)?;
+        write!(f, "{}data ${} = ", self.linkage, self.name)?;
 
         if let Some(align) = self.align {
             write!(f, "align {} ", align)?;
@@ -388,8 +384,8 @@ impl fmt::Display for Block {
 /// QBE function
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Function {
-    /// Should the function be available to outside users
-    pub exported: bool,
+    /// Function's linkage
+    pub linkage: Linkage,
 
     /// Function name
     pub name: String,
@@ -438,10 +434,7 @@ impl Function {
 
 impl fmt::Display for Function {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.exported {
-            write!(f, "export ")?;
-        }
-        write!(f, "function")?;
+        write!(f, "{}function", self.linkage)?;
         if let Some(ty) = &self.return_ty {
             write!(f, " {}", ty)?;
         }
@@ -466,7 +459,78 @@ impl fmt::Display for Function {
     }
 }
 
+/// Linkage of a function or data defintion (e.g. section and
+/// private/public status)
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+pub struct Linkage {
+    /// Specifies whether the target is going to be accessible publicly
+    pub exported: bool,
+
+    /// Specifies target's section
+    pub section: Option<String>,
+
+    /// Specifies target's section flags
+    pub secflags: Option<String>,
+}
+
+impl Linkage {
+    /// Returns the default configuration for private linkage
+    pub fn private() -> Linkage {
+        Linkage {
+            exported: false,
+            section: None,
+            secflags: None,
+        }
+    }
+
+    /// Returns the configuration for private linkage with a provided section
+    pub fn private_with_section(section: String) -> Linkage {
+        Linkage {
+            exported: false,
+            section: Some(section),
+            secflags: None,
+        }
+    }
+
+    /// Returns the default configuration for public linkage
+    pub fn public() -> Linkage {
+        Linkage {
+            exported: true,
+            section: None,
+            secflags: None,
+        }
+    }
+
+    /// Returns the configuration for public linkage with a provided section
+    pub fn public_with_section(section: String) -> Linkage {
+        Linkage {
+            exported: true,
+            section: Some(section),
+            secflags: None,
+        }
+    }
+}
+
+impl fmt::Display for Linkage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.exported {
+            write!(f, "export ")?;
+        }
+        if let Some(section) = &self.section {
+            // TODO: escape it, possibly
+            write!(f, "section \"{}\"", section)?;
+            if let Some(secflags) = &self.secflags {
+                write!(f, " \"{}\"", secflags)?;
+            }
+            write!(f, " ")?;
+        }
+
+        Ok(())
+    }
+}
+
 /// A complete IL file
+#[derive(Default)]
 pub struct Module {
     functions: Vec<Function>,
     types: Vec<TypeDef>,
@@ -487,13 +551,13 @@ impl Module {
     /// modification
     pub fn add_function(
         &mut self,
+        linkage: Linkage,
         name: String,
         arguments: Vec<(Type, Value)>,
         return_ty: Option<Type>,
     ) -> &mut Function {
-        // TODO: Linkage
         self.functions.push(Function {
-            exported: true,
+            linkage,
             name,
             arguments,
             return_ty,
@@ -508,10 +572,15 @@ impl Module {
     }
 
     /// Adds a data definition to the module
-    pub fn add_data(&mut self, name: String, align: Option<u64>, items: Vec<(Type, DataItem)>) {
-        // TODO: Linkage
+    pub fn add_data(
+        &mut self,
+        linkage: Linkage,
+        name: String,
+        align: Option<u64>,
+        items: Vec<(Type, DataItem)>,
+    ) {
         self.data.push(DataDef {
-            exported: true,
+            linkage,
             name,
             align,
             items,
