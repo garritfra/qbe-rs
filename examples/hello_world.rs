@@ -8,20 +8,14 @@ fn generate_add_func() -> Function {
         (Type::Word, Value::Temporary("b".into())),
     ];
 
-    let mut statements = Vec::new();
-
-    statements.push(Statement::Assign(
-        Value::Temporary("c".into()),
-        Type::Word,
-        Instr::Add(
-            Value::Temporary("a".into()),
-            Value::Temporary("b".into()),
+    let statements = vec![
+        Statement::Assign(
+            Value::Temporary("c".into()),
+            Type::Word,
+            Instr::Add(Value::Temporary("a".into()), Value::Temporary("b".into())),
         ),
-    ));
-
-    statements.push(Statement::Volatile(Instr::Ret(Some(
-        Value::Temporary("c".into()),
-    ))));
+        Statement::Volatile(Instr::Ret(Some(Value::Temporary("c".into())))),
+    ];
 
     let blocks = vec![Block {
         label: "start".into(),
@@ -38,33 +32,26 @@ fn generate_add_func() -> Function {
 }
 
 fn generate_main_func() -> Function {
-    let mut statements = Vec::new();
-
-    statements.push(Statement::Assign(
-        Value::Temporary("r".into()),
-        Type::Word,
-        Instr::Call(
-            "add".into(),
-            vec![
-                (Type::Word, Value::Const(1)),
-                (Type::Word, Value::Const(1)),
-            ],
+    let statements = vec![
+        Statement::Assign(
+            Value::Temporary("r".into()),
+            Type::Word,
+            Instr::Call(
+                "add".into(),
+                vec![(Type::Word, Value::Const(1)), (Type::Word, Value::Const(1))],
+            ),
         ),
-    ));
+        Statement::Volatile(Instr::Call(
+            "printf".into(),
+            vec![
+                (Type::Long, Value::Global("fmt".into())),
+                (Type::Word, Value::Temporary("r".into())),
+            ],
+        )),
+        Statement::Volatile(Instr::Ret(Some(Value::Const(0)))),
+    ];
 
     // TODO: The example shows a variadic call. We don't have those yet
-
-    statements.push(Statement::Volatile(Instr::Call(
-        "printf".into(),
-        vec![
-            (Type::Long, Value::Global("fmt".into())),
-            (Type::Word, Value::Temporary("r".into())),
-        ],
-    )));
-
-    statements.push(Statement::Volatile(Instr::Ret(Some(
-        Value::Const(0),
-    ))));
 
     let blocks = vec![Block {
         label: "start".into(),
@@ -82,10 +69,7 @@ fn generate_main_func() -> Function {
 
 fn generate_data() -> DataDef {
     let items = vec![
-        (
-            Type::Byte,
-            DataItem::Str("One and one make %d!\\n".into()),
-        ),
+        (Type::Byte, DataItem::Str("One and one make %d!\\n".into())),
         (Type::Byte, DataItem::Const(0)),
     ];
     DataDef {
