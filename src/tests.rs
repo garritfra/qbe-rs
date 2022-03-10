@@ -133,3 +133,20 @@ fn type_into_base() {
     assert_eq!(Type::Halfword.into_base(), Type::Word);
     assert_eq!(Type::Aggregate("foo".into()).into_base(), Type::Long);
 }
+
+#[test]
+fn add_function_to_module() {
+    let mut module = Module::new();
+
+    let function = Function {
+        linkage: Linkage::public(),
+        name: "foo".into(),
+        arguments: Vec::new(),
+        blocks: Vec::new(),
+        return_ty: None,
+    };
+
+    module.add_function(function.clone());
+
+    assert_eq!(module.functions.into_iter().next().unwrap(), function);
+}

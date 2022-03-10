@@ -3,7 +3,7 @@ use qbe::*;
 // Represents the hello world example from https://c9x.me/compile/
 
 fn generate_add_func(module: &mut Module) {
-    let func = module.add_function(
+    let mut func = Function::new(
         Linkage::private(),
         "add".into(),
         vec![
@@ -20,10 +20,17 @@ fn generate_add_func(module: &mut Module) {
         Instr::Add(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
     func.add_instr(Instr::Ret(Some(Value::Temporary("c".into()))));
+
+    module.add_function(func);
 }
 
 fn generate_main_func(module: &mut Module) {
-    let func = module.add_function(Linkage::public(), "main".into(), vec![], Some(Type::Word));
+    let mut func = Function::new(
+        Linkage::public(),
+        "main".into(),
+        Vec::new(),
+        Some(Type::Word),
+    );
 
     func.add_block("start".into());
     func.assign_instr(
@@ -43,6 +50,8 @@ fn generate_main_func(module: &mut Module) {
         ],
     ));
     func.add_instr(Instr::Ret(Some(Value::Const(0))));
+
+    module.add_function(func);
 }
 
 fn generate_data(module: &mut Module) {
@@ -50,7 +59,8 @@ fn generate_data(module: &mut Module) {
         (Type::Byte, DataItem::Str("One and one make %d!\\n".into())),
         (Type::Byte, DataItem::Const(0)),
     ];
-    module.add_data(Linkage::private(), "fmt".into(), None, items);
+    let data = DataDef::new(Linkage::private(), "fmt".into(), None, items);
+    module.add_data(data);
 }
 
 fn main() {

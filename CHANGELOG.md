@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Added
+
+-   `Function` and `DataDef` now have a `new` constructor
+-   `Module` now implements common traits (`Debug`, `Clone`, `Eq`, `PartialEq`,
+    `Ord`, `PartialOrd`, `Hash`, `Default` and `Copy`)
+
+### Changed
+
+-   `Module::add_function`, `Module::add_type` and `Module::add_data` now consume
+    their corresponding structs, instead of constructing them
 
 ## [1.0.0] - 2020-02-11
 

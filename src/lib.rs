@@ -237,6 +237,22 @@ pub struct DataDef {
     pub items: Vec<(Type, DataItem)>,
 }
 
+impl DataDef {
+    pub fn new(
+        linkage: Linkage,
+        name: String,
+        align: Option<u64>,
+        items: Vec<(Type, DataItem)>,
+    ) -> Self {
+        Self {
+            linkage,
+            name,
+            align,
+            items,
+        }
+    }
+}
+
 impl fmt::Display for DataDef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}data ${} = ", self.linkage, self.name)?;
@@ -401,6 +417,22 @@ pub struct Function {
 }
 
 impl Function {
+    /// Instantiates an empty function and returns it
+    pub fn new(
+        linkage: Linkage,
+        name: String,
+        arguments: Vec<(Type, Value)>,
+        return_ty: Option<Type>,
+    ) -> Self {
+        Function {
+            linkage,
+            name,
+            arguments,
+            return_ty,
+            blocks: Vec::new(),
+        }
+    }
+
     /// Adds a new empty block with a specified label and returns it
     pub fn add_block(&mut self, label: String) {
         self.blocks.push(Block {
@@ -530,7 +562,7 @@ impl fmt::Display for Linkage {
 }
 
 /// A complete IL file
-#[derive(Default)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Module {
     functions: Vec<Function>,
     types: Vec<TypeDef>,
@@ -549,42 +581,22 @@ impl Module {
 
     /// Adds a function to the module, returning a reference to it for later
     /// modification
-    pub fn add_function(
-        &mut self,
-        linkage: Linkage,
-        name: String,
-        arguments: Vec<(Type, Value)>,
-        return_ty: Option<Type>,
-    ) -> &mut Function {
-        self.functions.push(Function {
-            linkage,
-            name,
-            arguments,
-            return_ty,
-            blocks: Vec::new(),
-        });
+    pub fn add_function(&mut self, func: Function) -> &mut Function {
+        self.functions.push(func);
         return self.functions.last_mut().unwrap();
     }
 
-    /// Adds a type definition to the module
-    pub fn add_type(&mut self, name: String, align: Option<u64>, items: Vec<(Type, usize)>) {
-        self.types.push(TypeDef { name, align, items });
+    /// Adds a type definition to the module, returning a reference to it for
+    /// later modification
+    pub fn add_type(&mut self, def: TypeDef) -> &mut TypeDef {
+        self.types.push(def);
+        self.types.last_mut().unwrap()
     }
 
     /// Adds a data definition to the module
-    pub fn add_data(
-        &mut self,
-        linkage: Linkage,
-        name: String,
-        align: Option<u64>,
-        items: Vec<(Type, DataItem)>,
-    ) {
-        self.data.push(DataDef {
-            linkage,
-            name,
-            align,
-            items,
-        });
+    pub fn add_data(&mut self, data: DataDef) -> &mut DataDef {
+        self.data.push(data);
+        self.data.last_mut().unwrap()
     }
 }
 
