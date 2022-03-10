@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+xxx
+
+## [2.0.0] - 2022-03-10
+
 ### Added
 
 -   `Function` and `DataDef` now have a `new` constructor
@@ -15,7 +19,7 @@ All notable changes to this project will be documented in this file.
 -   `Module::add_function`, `Module::add_type` and `Module::add_data` now consume
     their corresponding structs, instead of constructing them
 
-## [1.0.0] - 2020-02-11
+## [1.0.0] - 2022-02-11
 
 ### Added
 
