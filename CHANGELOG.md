@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Changed
+
+- `Type.size` was removed, advising to implement the corresponding functionality
+  outside of this module
 
 ## [2.0.0] - 2022-03-10
 

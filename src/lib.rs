@@ -180,17 +180,6 @@ impl Type {
             other => other,
         }
     }
-
-    /// Returns byte size for values of the type
-    pub fn size(&self) -> u64 {
-        match self {
-            Self::Byte => 1,
-            Self::Halfword => 2,
-            Self::Word | Self::Single => 4,
-            // Aggregate types are syntactic sugar for pointers ;)
-            Self::Long | Self::Double | Self::Aggregate(_) => 8,
-        }
-    }
 }
 
 impl fmt::Display for Type {
