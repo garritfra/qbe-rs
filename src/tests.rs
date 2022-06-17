@@ -109,6 +109,25 @@ fn typedef() {
 }
 
 #[test]
+fn type_size() {
+    assert!(Type::Byte.size() == 1);
+    assert!(Type::Halfword.size() == 2);
+    assert!(Type::Word.size() == 4);
+    assert!(Type::Single.size() == 4);
+    assert!(Type::Long.size() == 8);
+    assert!(Type::Double.size() == 8);
+
+    let typedef = TypeDef {
+        name: "person".into(),
+        align: None,
+        items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+    };
+    let aggregate = Type::Aggregate(&typedef);
+    assert!(aggregate.size() == 17);
+    //assert!(aggregate.size() == 24);
+}
+
+#[test]
 fn type_into_abi() {
     // Base types and aggregates should stay unchanged
     let unchanged = |ty: Type| assert_eq!(ty.clone().into_abi(), ty);
