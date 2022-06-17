@@ -187,8 +187,15 @@ impl<'a> Type<'a> {
             Self::Byte => 1,
             Self::Halfword => 2,
             Self::Word | Self::Single => 4,
-            // Aggregate types are syntactic sugar for pointers ;)
-            Self::Long | Self::Double | Self::Aggregate(_) => 8,
+            Self::Long | Self::Double => 8,
+            Self::Aggregate(td) => {
+                // TODO: correct for alignment
+                let mut sz = 0_u64;
+                for (item, repeat) in td.items.iter() {
+                    sz += item.size() * (*repeat as u64);
+                }
+                sz
+            }
         }
     }
 }
