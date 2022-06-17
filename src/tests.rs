@@ -102,6 +102,10 @@ fn typedef() {
 
     let formatted = format!("{}", typedef);
     assert_eq!(formatted, "type :person = { l, w 2, b }");
+
+    let ty = Type::Aggregate(&typedef);
+    let formatted = format!("{}", ty);
+    assert_eq!(formatted, ":person");
 }
 
 #[test]
@@ -112,7 +116,12 @@ fn type_into_abi() {
     unchanged(Type::Long);
     unchanged(Type::Single);
     unchanged(Type::Double);
-    unchanged(Type::Aggregate("foo".into()));
+    let typedef = TypeDef {
+        name: "foo".into(),
+        align: None,
+        items: Vec::new(),
+    };
+    unchanged(Type::Aggregate(&typedef));
 
     // Extended types are transformed into closest base types
     assert_eq!(Type::Byte.into_abi(), Type::Word);
@@ -131,7 +140,12 @@ fn type_into_base() {
     // Extended and aggregate types are transformed into closest base types
     assert_eq!(Type::Byte.into_base(), Type::Word);
     assert_eq!(Type::Halfword.into_base(), Type::Word);
-    assert_eq!(Type::Aggregate("foo".into()).into_base(), Type::Long);
+    let typedef = TypeDef {
+        name: "foo".into(),
+        align: None,
+        items: Vec::new(),
+    };
+    assert_eq!(Type::Aggregate(&typedef).into_base(), Type::Long);
 }
 
 #[test]
