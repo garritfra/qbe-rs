@@ -124,7 +124,32 @@ fn type_size() {
     };
     let aggregate = Type::Aggregate(&typedef);
     assert!(aggregate.size() == 17);
-    //assert!(aggregate.size() == 24);
+}
+
+#[test]
+fn type_size_nested_aggregate() {
+    let inner = TypeDef {
+        name: "dog".into(),
+        align: None,
+        items: vec![(Type::Long, 2)],
+    };
+    let inner_aggregate = Type::Aggregate(&inner);
+
+    assert!(inner_aggregate.size() == 16);
+
+    let typedef = TypeDef {
+        name: "person".into(),
+        align: None,
+        items: vec![
+            (Type::Long, 1),
+            (Type::Word, 2),
+            (Type::Byte, 1),
+            (Type::Aggregate(&inner), 1),
+        ],
+    };
+    let aggregate = Type::Aggregate(&typedef);
+
+    assert!(aggregate.size() == 33);
 }
 
 #[test]
