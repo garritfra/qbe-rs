@@ -188,19 +188,13 @@ impl<'a> Type<'a> {
             Self::Halfword => 2,
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
-            Self::Aggregate(td) => {
-                match td.align {
-                    Some(align) => align,
-                    None => {
-                        assert!(!td.items.is_empty(), "Invalid empty TypeDef");
-                        td.items
-                            .iter()
-                            .map(|(ty, _)| ty.align())
-                            .max()
-                            .unwrap()
-                    }
+            Self::Aggregate(td) => match td.align {
+                Some(align) => align,
+                None => {
+                    assert!(!td.items.is_empty(), "Invalid empty TypeDef");
+                    td.items.iter().map(|(ty, _)| ty.align()).max().unwrap()
                 }
-            }
+            },
         }
     }
 
@@ -212,10 +206,13 @@ impl<'a> Type<'a> {
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
-                // TODO: correct for alignment
+                let align = self.align();
                 let mut sz = 0_u64;
                 for (item, repeat) in td.items.iter() {
-                    sz += item.size() * (*repeat as u64);
+                    // https://en.wikipedia.org/wiki/Data_structure_alignment
+                    let itemsz = item.size();
+                    let aligned = itemsz + (align - itemsz % align) % align;
+                    sz += aligned * (*repeat as u64);
                 }
                 sz
             }
