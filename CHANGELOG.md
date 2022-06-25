@@ -8,11 +8,16 @@ All notable changes to this project will be documented in this file.
 
 -   `Type::size()` can now correctly calculate the size of aggregate types
     ([#12](https://github.com/garritfra/qbe-rs/pull/12)).
+-   `Type::align()` helper function to calculate alignment of types
+    ([#13](https://github.com/garritfra/qbe-rs/pull/13)).
 
 ### Changed
 
 -   `Type::Aggregate` now takes a `TypeDef` instead of the name of a type
     ([#12](https://github.com/garritfra/qbe-rs/pull/12)).
+-   `Instr::Alloc{4,8,16}(size)` were replaced by a single
+    `Instr::Alloc(size, alignment)`
+    ([#13](https://github.com/garritfra/qbe-rs/pull/13)).
 
 ## [2.0.0] - 2022-03-10
 
