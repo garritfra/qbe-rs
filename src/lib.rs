@@ -181,6 +181,29 @@ impl<'a> Type<'a> {
         }
     }
 
+    /// Returns alignment of the type
+    pub fn align(&self) -> u64 {
+        match self {
+            Self::Byte => 1,
+            Self::Halfword => 2,
+            Self::Word | Self::Single => 4,
+            Self::Long | Self::Double => 8,
+            Self::Aggregate(td) => {
+                match td.align {
+                    Some(align) => align,
+                    None => {
+                        assert!(!td.items.is_empty(), "Invalid empty TypeDef");
+                        td.items
+                            .iter()
+                            .map(|(ty, _)| ty.align())
+                            .max()
+                            .unwrap()
+                    }
+                }
+            }
+        }
+    }
+
     /// Returns byte size for values of the type
     pub fn size(&self) -> u64 {
         match self {
