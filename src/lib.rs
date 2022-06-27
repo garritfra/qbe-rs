@@ -235,6 +235,20 @@ impl fmt::Display for Value {
     }
 }
 
+impl Value {
+    pub fn temporary(s: impl Into<String>) -> Self {
+        Value::Temporary(s.into())
+    }
+
+    pub fn global(s: impl Into<String>) -> Self {
+        Value::Global(s.into())
+    }
+
+    pub fn const_(n: u64) -> Self {
+        Value::Const(n)
+    }
+}
+
 /// QBE data definition
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct DataDef<'a> {
@@ -303,6 +317,20 @@ impl fmt::Display for DataItem {
     }
 }
 
+impl DataItem {
+    pub fn symbol(symbol: impl Into<String>, offset: Option<u64>) -> Self {
+        DataItem::Symbol(symbol.into(), offset)
+    }
+
+    pub fn str(s: impl Into<String>) -> Self {
+        DataItem::Str(s.into())
+    }
+
+    pub fn const_(n: u64) -> Self {
+        DataItem::Const(n)
+    }
+}
+
 /// QBE aggregate type definition
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct TypeDef<'a> {
@@ -332,6 +360,16 @@ impl<'a> fmt::Display for TypeDef<'a> {
                 .collect::<Vec<String>>()
                 .join(", "),
         )
+    }
+}
+
+impl<'a> TypeDef<'a> {
+    pub fn new(name: impl Into<String>, align: Option<u64>, items: Vec<(Type<'a>, usize)>) -> Self {
+        TypeDef {
+            name: name.into(),
+            align,
+            items,
+        }
     }
 }
 
@@ -365,6 +403,13 @@ pub struct Block<'a> {
 }
 
 impl<'a> Block<'a> {
+    pub fn new(label: impl Into<String>, statements: Vec<Statement<'a>>) -> Self {
+        Block {
+            label: label.into(),
+            statements,
+        }
+    }
+
     /// Adds a new instruction to the block
     pub fn add_instr(&mut self, instr: Instr<'a>) {
         self.statements.push(Statement::Volatile(instr));
