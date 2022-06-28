@@ -5,7 +5,7 @@ use qbe::*;
 fn generate_add_func(module: &mut Module) {
     let mut func = Function::new(
         Linkage::private(),
-        "add".into(),
+        "add",
         vec![
             (Type::Word, Value::Temporary("a".into())),
             (Type::Word, Value::Temporary("b".into())),
@@ -13,7 +13,7 @@ fn generate_add_func(module: &mut Module) {
         Some(Type::Word),
     );
 
-    func.add_block("start".into());
+    func.add_block("start");
     func.assign_instr(
         Value::Temporary("c".into()),
         Type::Word,
@@ -25,14 +25,9 @@ fn generate_add_func(module: &mut Module) {
 }
 
 fn generate_main_func(module: &mut Module) {
-    let mut func = Function::new(
-        Linkage::public(),
-        "main".into(),
-        Vec::new(),
-        Some(Type::Word),
-    );
+    let mut func = Function::new(Linkage::public(), "main", Vec::new(), Some(Type::Word));
 
-    func.add_block("start".into());
+    func.add_block("start");
     func.assign_instr(
         Value::Temporary("r".into()),
         Type::Word,
@@ -59,7 +54,7 @@ fn generate_data(module: &mut Module) {
         (Type::Byte, DataItem::Str("One and one make %d!\\n".into())),
         (Type::Byte, DataItem::Const(0)),
     ];
-    let data = DataDef::new(Linkage::private(), "fmt".into(), None, items);
+    let data = DataDef::new(Linkage::private(), "fmt", None, items);
     module.add_data(data);
 }
 
