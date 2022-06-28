@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 
 -   `Type::Aggregate` now takes a `TypeDef` instead of the name of a type
     ([#12](https://github.com/garritfra/qbe-rs/pull/12)).
+-   Various `new()` functions now take `Into<String>` instead of a
+    `String` ([#15](https://github.com/garritfra/qbe-rs/pull/15))
 
 ## [2.0.0] - 2022-03-10
 
