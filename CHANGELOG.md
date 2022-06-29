@@ -8,11 +8,13 @@ All notable changes to this project will be documented in this file.
 
 -   `Type::size()` can now correctly calculate the size of aggregate types
     ([#12](https://github.com/garritfra/qbe-rs/pull/12)).
+-   `Function::add_block()` returns a reference to the created block ([#18](https://github.com/garritfra/qbe-rs/pull/18))
 
 ### Changed
 
 -   `Type::Aggregate` now takes a `TypeDef` instead of the name of a type
     ([#12](https://github.com/garritfra/qbe-rs/pull/12)).
+-   Deprecated `Function::last_block()` ([#18](https://github.com/garritfra/qbe-rs/pull/18))
 
 ## [2.0.0] - 2022-03-10
 
