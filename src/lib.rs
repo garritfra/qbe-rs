@@ -440,14 +440,20 @@ impl<'a> Function<'a> {
         }
     }
 
-    /// Adds a new empty block with a specified label and returns it
-    pub fn add_block(&mut self, label: String) {
+    /// Adds a new empty block with a specified label and returns a reference to it
+    pub fn add_block(&mut self, label: String) -> &mut Block<'a> {
         self.blocks.push(Block {
             label,
             statements: Vec::new(),
         });
+        self.blocks.last_mut().unwrap()
     }
 
+    /// Returns a reference to the last block
+    #[deprecated(
+        since = "3.0.0",
+        note = "Use `self.blocks.last()` or `self.blocks.last_mut()` instead."
+    )]
     pub fn last_block(&mut self) -> &Block {
         self.blocks
             .last()
