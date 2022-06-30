@@ -109,47 +109,40 @@ fn typedef() {
 }
 
 #[test]
-fn type_size() {
-    assert!(Type::Byte.size() == 1);
-    assert!(Type::Halfword.size() == 2);
-    assert!(Type::Word.size() == 4);
-    assert!(Type::Single.size() == 4);
-    assert!(Type::Long.size() == 8);
-    assert!(Type::Double.size() == 8);
+fn type_size_and_align() {
+    assert_eq!(Type::Byte.size(), 1);
+    assert_eq!(Type::Halfword.size(), 2);
+    assert_eq!(Type::Word.size(), 4);
+    assert_eq!(Type::Single.size(), 4);
+    assert_eq!(Type::Long.size(), 8);
+    assert_eq!(Type::Double.size(), 8);
 
-    let typedef = TypeDef {
+    let person = TypeDef {
         name: "person".into(),
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
-    let aggregate = Type::Aggregate(&typedef);
-    assert!(aggregate.size() == 17);
-}
-
-#[test]
-fn type_size_nested_aggregate() {
-    let inner = TypeDef {
-        name: "dog".into(),
-        align: None,
-        items: vec![(Type::Long, 2)],
-    };
-    let inner_aggregate = Type::Aggregate(&inner);
-
-    assert!(inner_aggregate.size() == 16);
+    let aggregate = Type::Aggregate(&person);
+    assert_eq!(aggregate.align(), 8);
+    assert_eq!(aggregate.size(), 32);
 
     let typedef = TypeDef {
-        name: "person".into(),
+        name: "nested_person".into(),
         align: None,
-        items: vec![
-            (Type::Long, 1),
-            (Type::Word, 2),
-            (Type::Byte, 1),
-            (Type::Aggregate(&inner), 1),
-        ],
+        items: vec![(Type::Word, 1), (Type::Aggregate(&person), 1)],
     };
     let aggregate = Type::Aggregate(&typedef);
+    assert_eq!(aggregate.align(), 8);
+    assert_eq!(aggregate.size(), 40);
 
-    assert!(aggregate.size() == 33);
+    let typedef = TypeDef {
+        name: "packed_person".into(),
+        align: Some(1),
+        items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+    };
+    let aggregate = Type::Aggregate(&typedef);
+    assert_eq!(aggregate.align(), 1);
+    assert_eq!(aggregate.size(), 17);
 }
 
 #[test]

@@ -58,12 +58,8 @@ pub enum Instr<'a> {
     Jmp(String),
     /// Calls a function
     Call(String, Vec<(Type<'a>, Value)>),
-    /// Allocates a 4-byte aligned area on the stack
-    Alloc4(u32),
-    /// Allocates a 8-byte aligned area on the stack
-    Alloc8(u64),
-    /// Allocates a 16-byte aligned area on the stack
-    Alloc16(u128),
+    /// Allocates an area on the stack
+    Alloc(u64, usize),
     /// Stores a value into memory pointed to by destination.
     /// `(type, destination, value)`
     Store(Type<'a>, Value, Value),
@@ -124,9 +120,13 @@ impl<'a> fmt::Display for Instr<'a> {
                         .join(", "),
                 )
             }
-            Self::Alloc4(size) => write!(f, "alloc4 {}", size),
-            Self::Alloc8(size) => write!(f, "alloc8 {}", size),
-            Self::Alloc16(size) => write!(f, "alloc16 {}", size),
+            Self::Alloc(size, align) => {
+                assert!(
+                    *align == 4 || *align == 8 || *align == 16,
+                    "Invalid stack alignment"
+                );
+                write!(f, "alloc{} {}", align, size)
+            }
             Self::Store(ty, dest, value) => {
                 if matches!(ty, Type::Aggregate(_)) {
                     unimplemented!("Store to an aggregate type");
@@ -181,6 +181,23 @@ impl<'a> Type<'a> {
         }
     }
 
+    /// Returns alignment of the type
+    pub fn align(&self) -> u64 {
+        match self {
+            Self::Byte => 1,
+            Self::Halfword => 2,
+            Self::Word | Self::Single => 4,
+            Self::Long | Self::Double => 8,
+            Self::Aggregate(td) => match td.align {
+                Some(align) => align,
+                None => {
+                    assert!(!td.items.is_empty(), "Invalid empty TypeDef");
+                    td.items.iter().map(|(ty, _)| ty.align()).max().unwrap()
+                }
+            },
+        }
+    }
+
     /// Returns byte size for values of the type
     pub fn size(&self) -> u64 {
         match self {
@@ -189,10 +206,13 @@ impl<'a> Type<'a> {
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
-                // TODO: correct for alignment
+                let align = self.align();
                 let mut sz = 0_u64;
                 for (item, repeat) in td.items.iter() {
-                    sz += item.size() * (*repeat as u64);
+                    // https://en.wikipedia.org/wiki/Data_structure_alignment
+                    let itemsz = item.size();
+                    let aligned = itemsz + (align - itemsz % align) % align;
+                    sz += aligned * (*repeat as u64);
                 }
                 sz
             }
