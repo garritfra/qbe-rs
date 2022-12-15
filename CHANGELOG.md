@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [2.1.0] - 2022-12-15
+
+This release prepares the lib for the upcoming QBE 1.1.
 
 ### Added
 
