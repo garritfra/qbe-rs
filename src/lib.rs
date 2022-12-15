@@ -70,6 +70,15 @@ pub enum Instr<'a> {
     /// Loads a value from memory pointed to by source
     /// `(type, source)`
     Load(Type<'a>, Value),
+    /// `(source, destination, n)`
+    ///
+    /// Copy `n` bytes from the source address to the destination address.
+    ///
+    /// n must be a constant value.
+    ///
+    /// ## Minimum supported QBE version
+    /// `1.1`
+    Blit(Value, Value, u64),
 }
 
 impl<'a> fmt::Display for Instr<'a> {
@@ -141,6 +150,7 @@ impl<'a> fmt::Display for Instr<'a> {
 
                 write!(f, "load{} {}", ty, src)
             }
+            Self::Blit(src, dst, n) => write!(f, "blit {}, {}, {}", src, dst, n),
         }
     }
 }

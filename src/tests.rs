@@ -53,6 +53,23 @@ fn block() {
 }
 
 #[test]
+fn instr_blit() {
+    let blk = Block {
+        label: "start".into(),
+        statements: vec![Statement::Volatile(Instr::Blit(
+            Value::Temporary("src".into()),
+            Value::Temporary("dst".into()),
+            4,
+        ))],
+    };
+
+    let formatted = format!("{}", blk);
+    let mut lines = formatted.lines();
+    assert_eq!(lines.next().unwrap(), "@start");
+    assert_eq!(lines.next().unwrap(), "\tblit %src, %dst, 4");
+}
+
+#[test]
 fn function() {
     let func = Function {
         linkage: Linkage::public(),
