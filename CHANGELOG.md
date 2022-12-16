@@ -4,17 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+-   Various `new()` functions now take `Into<String>` instead of a
+    `String` ([#15](https://github.com/garritfra/qbe-rs/pull/15))
+
+## [2.1.0] - 2022-12-15
+
+This release prepares the lib for the upcoming QBE 1.1.
+
 ### Added
 
 -   `Type::size()` can now correctly calculate the size of aggregate types
     ([#12](https://github.com/garritfra/qbe-rs/pull/12)).
+-   `Function::add_block()` returns a reference to the created block ([#18](https://github.com/garritfra/qbe-rs/pull/18))
+- Add `blit` instruction, in preparation for QBE release 1.1 ([#20](https://github.com/garritfra/qbe-rs/pull/20)).
 
 ### Changed
 
 -   `Type::Aggregate` now takes a `TypeDef` instead of the name of a type
     ([#12](https://github.com/garritfra/qbe-rs/pull/12)).
--   Various `new()` functions now take `Into<String>` instead of a
-    `String` ([#15](https://github.com/garritfra/qbe-rs/pull/15))
+-   Deprecated `Function::last_block()` ([#18](https://github.com/garritfra/qbe-rs/pull/18))
 
 ## [2.0.0] - 2022-03-10
 

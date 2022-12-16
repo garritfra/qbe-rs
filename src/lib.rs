@@ -70,6 +70,15 @@ pub enum Instr<'a> {
     /// Loads a value from memory pointed to by source
     /// `(type, source)`
     Load(Type<'a>, Value),
+    /// `(source, destination, n)`
+    ///
+    /// Copy `n` bytes from the source address to the destination address.
+    ///
+    /// n must be a constant value.
+    ///
+    /// ## Minimum supported QBE version
+    /// `1.1`
+    Blit(Value, Value, u64),
 }
 
 impl<'a> fmt::Display for Instr<'a> {
@@ -141,6 +150,7 @@ impl<'a> fmt::Display for Instr<'a> {
 
                 write!(f, "load{} {}", ty, src)
             }
+            Self::Blit(src, dst, n) => write!(f, "blit {}, {}, {}", src, dst, n),
         }
     }
 }
@@ -440,14 +450,20 @@ impl<'a> Function<'a> {
         }
     }
 
-    /// Adds a new empty block with a specified label and returns it
-    pub fn add_block(&mut self, label: impl Into<String>) {
+    /// Adds a new empty block with a specified label and returns a reference to it
+    pub fn add_block(&mut self, label: impl Into<String>) -> &mut Block<'a> {
         self.blocks.push(Block {
             label: label.into(),
             statements: Vec::new(),
         });
+        self.blocks.last_mut().unwrap()
     }
 
+    /// Returns a reference to the last block
+    #[deprecated(
+        since = "3.0.0",
+        note = "Use `self.blocks.last()` or `self.blocks.last_mut()` instead."
+    )]
     pub fn last_block(&mut self) -> &Block {
         self.blocks
             .last()
