@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+-   Various `new()` functions now take `Into<String>` instead of a
+    `String` ([#15](https://github.com/garritfra/qbe-rs/pull/15))
+
 ## [2.1.0] - 2022-12-15
 
 This release prepares the lib for the upcoming QBE 1.1.

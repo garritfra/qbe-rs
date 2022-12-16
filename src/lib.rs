@@ -257,13 +257,13 @@ pub struct DataDef<'a> {
 impl<'a> DataDef<'a> {
     pub fn new(
         linkage: Linkage,
-        name: String,
+        name: impl Into<String>,
         align: Option<u64>,
         items: Vec<(Type<'a>, DataItem)>,
     ) -> Self {
         Self {
             linkage,
-            name,
+            name: name.into(),
             align,
             items,
         }
@@ -437,13 +437,13 @@ impl<'a> Function<'a> {
     /// Instantiates an empty function and returns it
     pub fn new(
         linkage: Linkage,
-        name: String,
+        name: impl Into<String>,
         arguments: Vec<(Type<'a>, Value)>,
         return_ty: Option<Type<'a>>,
     ) -> Self {
         Function {
             linkage,
-            name,
+            name: name.into(),
             arguments,
             return_ty,
             blocks: Vec::new(),
@@ -451,9 +451,9 @@ impl<'a> Function<'a> {
     }
 
     /// Adds a new empty block with a specified label and returns a reference to it
-    pub fn add_block(&mut self, label: String) -> &mut Block<'a> {
+    pub fn add_block(&mut self, label: impl Into<String>) -> &mut Block<'a> {
         self.blocks.push(Block {
-            label,
+            label: label.into(),
             statements: Vec::new(),
         });
         self.blocks.last_mut().unwrap()
@@ -539,10 +539,10 @@ impl Linkage {
     }
 
     /// Returns the configuration for private linkage with a provided section
-    pub fn private_with_section(section: String) -> Linkage {
+    pub fn private_with_section(section: impl Into<String>) -> Linkage {
         Linkage {
             exported: false,
-            section: Some(section),
+            section: Some(section.into()),
             secflags: None,
         }
     }
@@ -557,10 +557,10 @@ impl Linkage {
     }
 
     /// Returns the configuration for public linkage with a provided section
-    pub fn public_with_section(section: String) -> Linkage {
+    pub fn public_with_section(section: impl Into<String>) -> Linkage {
         Linkage {
             exported: true,
-            section: Some(section),
+            section: Some(section.into()),
             secflags: None,
         }
     }

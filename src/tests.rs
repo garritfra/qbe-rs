@@ -91,6 +91,21 @@ fn function() {
 }
 
 #[test]
+fn function_new_equivalence() {
+    let func1 = Function {
+        linkage: Linkage::public(),
+        return_ty: None,
+        name: "main".into(),
+        arguments: Vec::new(),
+        blocks: Vec::new(),
+    };
+
+    let func2 = Function::new(Linkage::public(), "main", Vec::new(), None);
+
+    assert_eq!(func1, func2);
+}
+
+#[test]
 fn datadef() {
     let datadef = DataDef {
         linkage: Linkage::public(),
@@ -107,6 +122,20 @@ fn datadef() {
         formatted,
         "export data $hello = { b \"Hello, World!\", b 0 }"
     );
+}
+
+#[test]
+fn datadef_new_equivalence() {
+    let datadef1 = DataDef {
+        linkage: Linkage::public(),
+        name: "hello".into(),
+        align: None,
+        items: vec![],
+    };
+
+    let datadef2 = DataDef::new(Linkage::public(), "hello", None, vec![]);
+
+    assert_eq!(datadef1, datadef2);
 }
 
 #[test]
