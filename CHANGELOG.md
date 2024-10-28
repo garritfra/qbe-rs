@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 -   Various `new()` functions now take `Into<String>` instead of a
     `String` ([#15](https://github.com/garritfra/qbe-rs/pull/15))
+-   Add unsigned and signed variants of sub-word types: `Type::SignedByte`, `Type::UnsignedByte`, `Type::SignedHalfword`, `Type::UnsignedHalfword` ([#23](https://github.com/garritfra/qbe-rs/pull/23))
 
 ## [2.1.0] - 2022-12-15
 
