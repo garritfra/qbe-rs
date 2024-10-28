@@ -157,7 +157,11 @@ fn typedef() {
 #[test]
 fn type_size() {
     assert!(Type::Byte.size() == 1);
+    assert!(Type::SignedByte.size() == 1);
+    assert!(Type::UnsignedByte.size() == 1);
     assert!(Type::Halfword.size() == 2);
+    assert!(Type::SignedHalfword.size() == 2);
+    assert!(Type::UnsignedHalfword.size() == 2);
     assert!(Type::Word.size() == 4);
     assert!(Type::Single.size() == 4);
     assert!(Type::Long.size() == 8);
@@ -215,7 +219,11 @@ fn type_into_abi() {
 
     // Extended types are transformed into closest base types
     assert_eq!(Type::Byte.into_abi(), Type::Word);
+    assert_eq!(Type::UnsignedByte.into_abi(), Type::Word);
+    assert_eq!(Type::SignedByte.into_abi(), Type::Word);
     assert_eq!(Type::Halfword.into_abi(), Type::Word);
+    assert_eq!(Type::UnsignedHalfword.into_abi(), Type::Word);
+    assert_eq!(Type::SignedHalfword.into_abi(), Type::Word);
 }
 
 #[test]
@@ -229,7 +237,11 @@ fn type_into_base() {
 
     // Extended and aggregate types are transformed into closest base types
     assert_eq!(Type::Byte.into_base(), Type::Word);
+    assert_eq!(Type::UnsignedByte.into_base(), Type::Word);
+    assert_eq!(Type::SignedHalfword.into_base(), Type::Word);
     assert_eq!(Type::Halfword.into_base(), Type::Word);
+    assert_eq!(Type::UnsignedHalfword.into_base(), Type::Word);
+    assert_eq!(Type::SignedHalfword.into_base(), Type::Word);
     let typedef = TypeDef {
         name: "foo".into(),
         align: None,
