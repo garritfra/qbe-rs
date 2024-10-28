@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+xxx
+
+## [2.2.0] - 2024-10-28
+
 ### Changed
 
 -   Various `new()` functions now take `Into<String>` instead of a
