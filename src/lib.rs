@@ -166,7 +166,11 @@ pub enum Type<'a> {
 
     // Extended types
     Byte,
+    SignedByte,
+    UnsignedByte,
     Halfword,
+    SignedHalfword,
+    UnsignedHalfword,
 
     /// Aggregate type with a specified name
     Aggregate(&'a TypeDef<'a>),
@@ -177,7 +181,12 @@ impl<'a> Type<'a> {
     /// types
     pub fn into_abi(self) -> Self {
         match self {
-            Self::Byte | Self::Halfword => Self::Word,
+            Self::Byte
+            | Self::SignedByte
+            | Self::UnsignedByte
+            | Self::Halfword
+            | Self::SignedHalfword
+            | Self::UnsignedHalfword => Self::Word,
             other => other,
         }
     }
@@ -185,7 +194,12 @@ impl<'a> Type<'a> {
     /// Returns the closest base type
     pub fn into_base(self) -> Self {
         match self {
-            Self::Byte | Self::Halfword => Self::Word,
+            Self::Byte
+            | Self::SignedByte
+            | Self::UnsignedByte
+            | Self::Halfword
+            | Self::SignedHalfword
+            | Self::UnsignedHalfword => Self::Word,
             Self::Aggregate(_) => Self::Long,
             other => other,
         }
@@ -194,8 +208,8 @@ impl<'a> Type<'a> {
     /// Returns byte size for values of the type
     pub fn size(&self) -> u64 {
         match self {
-            Self::Byte => 1,
-            Self::Halfword => 2,
+            Self::Byte | Self::SignedByte | Self::UnsignedByte => 1,
+            Self::Halfword | Self::SignedHalfword | Self::UnsignedHalfword => 2,
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
@@ -214,7 +228,11 @@ impl<'a> fmt::Display for Type<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Byte => write!(f, "b"),
+            Self::SignedByte => write!(f, "sb"),
+            Self::UnsignedByte => write!(f, "ub"),
             Self::Halfword => write!(f, "h"),
+            Self::SignedHalfword => write!(f, "sh"),
+            Self::UnsignedHalfword => write!(f, "uh"),
             Self::Word => write!(f, "w"),
             Self::Long => write!(f, "l"),
             Self::Single => write!(f, "s"),
