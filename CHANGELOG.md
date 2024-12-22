@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Added
+
+- Additional comparison operators: ordered (O), unordered (UO), and unsigned integer comparisons (Ult, Ule, Ugt, Uge)
+- Bitwise shifting instructions: `Sar`, `Shr`, and `Shl`
+- Unsigned arithmetic instructions: `Udiv` and `Urem`
+- Type conversion instructions:
+  - `Cast` instruction for converting between integers and floating points
+  - Extension operations: `Extsw`, `Extuw`, `Extsh`, `Extuh`, `Extsb`, `Extub`
+  - Float precision conversion: `Exts`, `Truncd`
+  - Float-integer conversions: `Stosi`, `Stoui`, `Dtosi`, `Dtoui`, `Swtof`, `Uwtof`, `Sltof`, `Ultof`
+- Variadic function support with `Vastart` and `Vaarg` instructions
+- Program termination instruction `Hlt`
+- Thread-local storage support in `Linkage` with convenience constructors
+- Zero-initialized data support with `DataItem::Zero`
 
 ## [2.3.1] - 2025-02-28
 

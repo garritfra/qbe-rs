@@ -27,6 +27,18 @@ pub enum Cmp {
     Eq,
     /// Returns 1 if values are not equal
     Ne,
+    /// Returns 1 if both operands are not NaN (ordered comparison)
+    O,
+    /// Returns 1 if at least one operand is NaN (unordered comparison)
+    Uo,
+    /// Returns 1 if first value is less than second, unsigned comparison
+    Ult,
+    /// Returns 1 if first value is less than or equal to second, unsigned comparison
+    Ule,
+    /// Returns 1 if first value is greater than second, unsigned comparison
+    Ugt,
+    /// Returns 1 if first value is greater than or equal to second, unsigned comparison
+    Uge,
 }
 
 /// QBE instruction
@@ -86,6 +98,70 @@ pub enum Instr<'a> {
     ///
     /// Takes line number and an optional column.
     DbgLoc(u64, Option<u64>),
+
+    // Unsigned arithmetic
+    /// Performs unsigned division of the first value by the second one
+    Udiv(Value, Value),
+    /// Returns the remainder from unsigned division
+    Urem(Value, Value),
+
+    // Shifts
+    /// Shift arithmetic right (preserves sign)
+    Sar(Value, Value),
+    /// Shift logical right (fills with zeros)
+    Shr(Value, Value),
+    /// Shift left (fills with zeros)
+    Shl(Value, Value),
+
+    // Type conversions
+    /// Cast between integer and floating point of the same width
+    Cast(Value),
+
+    // Extension operations
+    /// Sign-extends a word to a long
+    Extsw(Value),
+    /// Zero-extends a word to a long
+    Extuw(Value),
+    /// Sign-extends a halfword to a word or long
+    Extsh(Value),
+    /// Zero-extends a halfword to a word or long
+    Extuh(Value),
+    /// Sign-extends a byte to a word or long
+    Extsb(Value),
+    /// Zero-extends a byte to a word or long
+    Extub(Value),
+    /// Extends a single-precision float to double-precision
+    Exts(Value),
+    /// Truncates a double-precision float to single-precision
+    Truncd(Value),
+
+    // Float-integer conversions
+    /// Converts a single-precision float to a signed integer
+    Stosi(Value),
+    /// Converts a single-precision float to an unsigned integer
+    Stoui(Value),
+    /// Converts a double-precision float to a signed integer
+    Dtosi(Value),
+    /// Converts a double-precision float to an unsigned integer
+    Dtoui(Value),
+    /// Converts a signed word to a float
+    Swtof(Value),
+    /// Converts an unsigned word to a float
+    Uwtof(Value),
+    /// Converts a signed long to a float
+    Sltof(Value),
+    /// Converts an unsigned long to a float
+    Ultof(Value),
+
+    // Variadic function support
+    /// Initializes a variable argument list
+    Vastart(Value),
+    /// Fetches the next argument from a variable argument list
+    Vaarg(Type<'a>, Value),
+
+    // Program termination
+    /// Terminates the program with an error
+    Hlt,
 }
 
 impl fmt::Display for Instr<'_> {
@@ -112,6 +188,12 @@ impl fmt::Display for Instr<'_> {
                         Cmp::Sge => "sge",
                         Cmp::Eq => "eq",
                         Cmp::Ne => "ne",
+                        Cmp::O => "o",
+                        Cmp::Uo => "uo",
+                        Cmp::Ult => "ult",
+                        Cmp::Ule => "ule",
+                        Cmp::Ugt => "ugt",
+                        Cmp::Uge => "uge",
                     },
                     ty,
                     lhs,
@@ -163,6 +245,31 @@ impl fmt::Display for Instr<'_> {
                 write!(f, "load{} {}", ty, src)
             }
             Self::Blit(src, dst, n) => write!(f, "blit {}, {}, {}", src, dst, n),
+            Self::Udiv(lhs, rhs) => write!(f, "udiv {}, {}", lhs, rhs),
+            Self::Urem(lhs, rhs) => write!(f, "urem {}, {}", lhs, rhs),
+            Self::Sar(lhs, rhs) => write!(f, "sar {}, {}", lhs, rhs),
+            Self::Shr(lhs, rhs) => write!(f, "shr {}, {}", lhs, rhs),
+            Self::Shl(lhs, rhs) => write!(f, "shl {}, {}", lhs, rhs),
+            Self::Cast(val) => write!(f, "cast {}", val),
+            Self::Extsw(val) => write!(f, "extsw {}", val),
+            Self::Extuw(val) => write!(f, "extuw {}", val),
+            Self::Extsh(val) => write!(f, "extsh {}", val),
+            Self::Extuh(val) => write!(f, "extuh {}", val),
+            Self::Extsb(val) => write!(f, "extsb {}", val),
+            Self::Extub(val) => write!(f, "extub {}", val),
+            Self::Exts(val) => write!(f, "exts {}", val),
+            Self::Truncd(val) => write!(f, "truncd {}", val),
+            Self::Stosi(val) => write!(f, "stosi {}", val),
+            Self::Stoui(val) => write!(f, "stoui {}", val),
+            Self::Dtosi(val) => write!(f, "dtosi {}", val),
+            Self::Dtoui(val) => write!(f, "dtoui {}", val),
+            Self::Swtof(val) => write!(f, "swtof {}", val),
+            Self::Uwtof(val) => write!(f, "uwtof {}", val),
+            Self::Sltof(val) => write!(f, "sltof {}", val),
+            Self::Ultof(val) => write!(f, "ultof {}", val),
+            Self::Vastart(val) => write!(f, "vastart {}", val),
+            Self::Vaarg(ty, val) => write!(f, "vaarg{} {}", ty, val),
+            Self::Hlt => write!(f, "hlt"),
         }
     }
 }
@@ -332,6 +439,8 @@ pub enum DataItem {
     Str(String),
     /// Constant
     Const(u64),
+    /// Zero-initialized data of specified size
+    Zero(u64),
 }
 
 impl fmt::Display for DataItem {
@@ -343,6 +452,7 @@ impl fmt::Display for DataItem {
             },
             Self::Str(string) => write!(f, "\"{}\"", string),
             Self::Const(val) => write!(f, "{}", val),
+            Self::Zero(size) => write!(f, "z {}", size),
         }
     }
 }
@@ -584,6 +694,9 @@ pub struct Linkage {
 
     /// Specifies target's section flags
     pub secflags: Option<String>,
+
+    /// Specifies whether the target is stored in thread-local storage
+    pub thread_local: bool,
 }
 
 impl Linkage {
@@ -593,6 +706,7 @@ impl Linkage {
             exported: false,
             section: None,
             secflags: None,
+            thread_local: false,
         }
     }
 
@@ -602,6 +716,7 @@ impl Linkage {
             exported: false,
             section: Some(section.into()),
             secflags: None,
+            thread_local: false,
         }
     }
 
@@ -611,6 +726,7 @@ impl Linkage {
             exported: true,
             section: None,
             secflags: None,
+            thread_local: false,
         }
     }
 
@@ -618,6 +734,34 @@ impl Linkage {
     pub fn public_with_section(section: impl Into<String>) -> Linkage {
         Linkage {
             exported: true,
+            section: Some(section.into()),
+            secflags: None,
+            thread_local: false,
+        }
+    }
+
+    pub fn thread_local() -> Linkage {
+        Linkage {
+            exported: false,
+            thread_local: true,
+            section: None,
+            secflags: None,
+        }
+    }
+
+    pub fn exported_thread_local() -> Linkage {
+        Linkage {
+            exported: true,
+            thread_local: true,
+            section: None,
+            secflags: None,
+        }
+    }
+
+    pub fn thread_local_with_section(section: impl Into<String>) -> Linkage {
+        Linkage {
+            exported: false,
+            thread_local: true,
             section: Some(section.into()),
             secflags: None,
         }
@@ -628,6 +772,9 @@ impl fmt::Display for Linkage {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.exported {
             write!(f, "export ")?;
+        }
+        if self.thread_local {
+            write!(f, "thread ")?;
         }
         if let Some(section) = &self.section {
             // TODO: escape it, possibly
