@@ -57,7 +57,7 @@ pub enum Instr<'a> {
     /// Unconditionally jumps to a label
     Jmp(String),
     /// Calls a function
-    Call(String, Vec<(Type<'a>, Value)>),
+    Call(String, Vec<(Type<'a>, Value)>, Option<u64>),
     /// Allocates a 4-byte aligned area on the stack
     Alloc4(u32),
     /// Allocates a 8-byte aligned area on the stack
@@ -122,16 +122,16 @@ impl<'a> fmt::Display for Instr<'a> {
                 write!(f, "jnz {}, @{}, @{}", val, if_nonzero, if_zero)
             }
             Self::Jmp(label) => write!(f, "jmp @{}", label),
-            Self::Call(name, args) => {
-                write!(
-                    f,
-                    "call ${}({})",
-                    name,
-                    args.iter()
-                        .map(|(ty, temp)| format!("{} {}", ty, temp))
-                        .collect::<Vec<String>>()
-                        .join(", "),
-                )
+            Self::Call(name, args, opt_variadic_i) => {
+                let mut args_fmt = args
+                    .iter()
+                    .map(|(ty, temp)| format!("{} {}", ty, temp))
+                    .collect::<Vec<String>>();
+                if let Some(i) = *opt_variadic_i {
+                    args_fmt.insert(i as usize, "...".to_string());
+                }
+
+                write!(f, "call ${}({})", name, args_fmt.join(", "),)
             }
             Self::Alloc4(size) => write!(f, "alloc4 {}", size),
             Self::Alloc8(size) => write!(f, "alloc8 {}", size),

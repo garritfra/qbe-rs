@@ -266,3 +266,17 @@ fn add_function_to_module() {
 
     assert_eq!(module.functions.into_iter().next().unwrap(), function);
 }
+
+#[test]
+fn variadic_call() {
+    let instr = Instr::Call(
+        "printf".into(),
+        vec![
+            (Type::Long, Value::Global("fmt".into())),
+            (Type::Word, Value::Const(0)),
+        ],
+        Some(1),
+    );
+
+    assert_eq!(instr.to_string(), "call $printf(l $fmt, ..., w 0)");
+}
