@@ -389,26 +389,50 @@ pub struct Block<'a> {
     pub label: String,
 
     /// A list of statements in the block
-    pub statements: Vec<Statement<'a>>,
+    pub items: Vec<BlockItem<'a>>,
+}
+
+/// See [`Block::items`];
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum BlockItem<'a> {
+    Statement(Statement<'a>),
+    Comment(String),
+}
+
+impl<'a> fmt::Display for BlockItem<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Statement(stmt) => write!(f, "{}", stmt),
+            Self::Comment(comment) => write!(f, "# {}", comment),
+        }
+    }
 }
 
 impl<'a> Block<'a> {
+    pub fn add_comment(&mut self, contents: impl Into<String>) {
+        self.items.push(BlockItem::Comment(contents.into()));
+    }
+
     /// Adds a new instruction to the block
     pub fn add_instr(&mut self, instr: Instr<'a>) {
-        self.statements.push(Statement::Volatile(instr));
+        self.items
+            .push(BlockItem::Statement(Statement::Volatile(instr)));
     }
 
     /// Adds a new instruction assigned to a temporary
     pub fn assign_instr(&mut self, temp: Value, ty: Type<'a>, instr: Instr<'a>) {
-        self.statements
-            .push(Statement::Assign(temp, ty.into_base(), instr));
+        self.items.push(BlockItem::Statement(Statement::Assign(
+            temp,
+            ty.into_base(),
+            instr,
+        )));
     }
 
     /// Returns true if the block's last instruction is a jump
     pub fn jumps(&self) -> bool {
-        let last = self.statements.last();
+        let last = self.items.last();
 
-        if let Some(Statement::Volatile(instr)) = last {
+        if let Some(BlockItem::Statement(Statement::Volatile(instr))) = last {
             matches!(instr, Instr::Ret(_) | Instr::Jmp(_) | Instr::Jnz(..))
         } else {
             false
@@ -423,7 +447,7 @@ impl fmt::Display for Block<'_> {
         write!(
             f,
             "{}",
-            self.statements
+            self.items
                 .iter()
                 .map(|instr| format!("\t{}", instr))
                 .collect::<Vec<String>>()
@@ -472,7 +496,7 @@ impl<'a> Function<'a> {
     pub fn add_block(&mut self, label: impl Into<String>) -> &mut Block<'a> {
         self.blocks.push(Block {
             label: label.into(),
-            statements: Vec::new(),
+            items: Vec::new(),
         });
         self.blocks.last_mut().unwrap()
     }
