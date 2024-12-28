@@ -81,7 +81,7 @@ pub enum Instr<'a> {
     Blit(Value, Value, u64),
 }
 
-impl<'a> fmt::Display for Instr<'a> {
+impl fmt::Display for Instr<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Add(lhs, rhs) => write!(f, "add {}, {}", lhs, rhs),
@@ -176,7 +176,7 @@ pub enum Type<'a> {
     Aggregate(&'a TypeDef<'a>),
 }
 
-impl<'a> Type<'a> {
+impl Type<'_> {
     /// Returns a C ABI type. Extended types are converted to closest base
     /// types
     pub fn into_abi(self) -> Self {
@@ -224,7 +224,7 @@ impl<'a> Type<'a> {
     }
 }
 
-impl<'a> fmt::Display for Type<'a> {
+impl fmt::Display for Type<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Byte => write!(f, "b"),
@@ -288,7 +288,7 @@ impl<'a> DataDef<'a> {
     }
 }
 
-impl<'a> fmt::Display for DataDef<'a> {
+impl fmt::Display for DataDef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}data ${} = ", self.linkage, self.name)?;
 
@@ -340,7 +340,7 @@ pub struct TypeDef<'a> {
     pub items: Vec<(Type<'a>, usize)>,
 }
 
-impl<'a> fmt::Display for TypeDef<'a> {
+impl fmt::Display for TypeDef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "type :{} = ", self.name)?;
         if let Some(align) = self.align {
@@ -370,7 +370,7 @@ pub enum Statement<'a> {
     Volatile(Instr<'a>),
 }
 
-impl<'a> fmt::Display for Statement<'a> {
+impl fmt::Display for Statement<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Assign(temp, ty, instr) => {
@@ -416,7 +416,7 @@ impl<'a> Block<'a> {
     }
 }
 
-impl<'a> fmt::Display for Block<'a> {
+impl fmt::Display for Block<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "@{}", self.label)?;
 
@@ -505,7 +505,7 @@ impl<'a> Function<'a> {
     }
 }
 
-impl<'a> fmt::Display for Function<'a> {
+impl fmt::Display for Function<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}function", self.linkage)?;
         if let Some(ty) = &self.return_ty {
@@ -624,7 +624,7 @@ impl<'a> Module<'a> {
     /// modification
     pub fn add_function(&mut self, func: Function<'a>) -> &mut Function<'a> {
         self.functions.push(func);
-        return self.functions.last_mut().unwrap();
+        self.functions.last_mut().unwrap()
     }
 
     /// Adds a type definition to the module, returning a reference to it for
@@ -641,7 +641,7 @@ impl<'a> Module<'a> {
     }
 }
 
-impl<'a> fmt::Display for Module<'a> {
+impl fmt::Display for Module<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for func in self.functions.iter() {
             writeln!(f, "{}", func)?;
