@@ -25,7 +25,7 @@ fn qbe_value() {
 fn block() {
     let blk = Block {
         label: "start".into(),
-        statements: vec![Statement::Volatile(Instr::Ret(None))],
+        items: vec![BlockItem::Statement(Statement::Volatile(Instr::Ret(None)))],
     };
 
     let formatted = format!("{}", blk);
@@ -35,19 +35,23 @@ fn block() {
 
     let blk = Block {
         label: "start".into(),
-        statements: vec![
-            Statement::Assign(
+        items: vec![
+            BlockItem::Comment("Comment".into()),
+            BlockItem::Statement(Statement::Assign(
                 Value::Temporary("foo".into()),
                 Type::Word,
                 Instr::Add(Value::Const(2), Value::Const(2)),
-            ),
-            Statement::Volatile(Instr::Ret(Some(Value::Temporary("foo".into())))),
+            )),
+            BlockItem::Statement(Statement::Volatile(Instr::Ret(Some(Value::Temporary(
+                "foo".into(),
+            ))))),
         ],
     };
 
     let formatted = format!("{}", blk);
     let mut lines = formatted.lines();
     assert_eq!(lines.next().unwrap(), "@start");
+    assert_eq!(lines.next().unwrap(), "\t# Comment");
     assert_eq!(lines.next().unwrap(), "\t%foo =w add 2, 2");
     assert_eq!(lines.next().unwrap(), "\tret %foo");
 }
@@ -56,11 +60,11 @@ fn block() {
 fn instr_blit() {
     let blk = Block {
         label: "start".into(),
-        statements: vec![Statement::Volatile(Instr::Blit(
+        items: vec![BlockItem::Statement(Statement::Volatile(Instr::Blit(
             Value::Temporary("src".into()),
             Value::Temporary("dst".into()),
             4,
-        ))],
+        )))],
     };
 
     let formatted = format!("{}", blk);
@@ -78,7 +82,7 @@ fn function() {
         arguments: Vec::new(),
         blocks: vec![Block {
             label: "start".into(),
-            statements: vec![Statement::Volatile(Instr::Ret(None))],
+            items: vec![BlockItem::Statement(Statement::Volatile(Instr::Ret(None)))],
         }],
     };
 
