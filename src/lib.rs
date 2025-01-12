@@ -164,6 +164,9 @@ pub enum Type<'a> {
     Single,
     Double,
 
+    // Internal types
+    Zero,
+
     // Extended types
     Byte,
     SignedByte,
@@ -210,7 +213,8 @@ impl Type<'_> {
         match self {
             Self::Byte | Self::SignedByte | Self::UnsignedByte => 1,
             Self::Halfword | Self::SignedHalfword | Self::UnsignedHalfword => 2,
-            Self::Word | Self::Single => 4,
+            // TODO: I don't actually know if [`Zero`] is 4.
+            Self::Word | Self::Single | Self::Zero => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
                 // TODO: correct for alignment
@@ -237,6 +241,7 @@ impl fmt::Display for Type<'_> {
             Self::Long => write!(f, "l"),
             Self::Single => write!(f, "s"),
             Self::Double => write!(f, "d"),
+            Self::Zero => write!(f, "z"),
             Self::Aggregate(td) => write!(f, ":{}", td.name),
         }
     }
