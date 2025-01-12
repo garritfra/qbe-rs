@@ -223,10 +223,9 @@ impl Type<'_> {
     /// Returns byte size for values of the type
     pub fn size(&self) -> u64 {
         match self {
-            Self::Byte | Self::SignedByte | Self::UnsignedByte => 1,
+            Self::Byte | Self::SignedByte | Self::UnsignedByte | Self::Zero => 1,
             Self::Halfword | Self::SignedHalfword | Self::UnsignedHalfword => 2,
-            // TODO: I don't actually know if [`Zero`] is 4.
-            Self::Word | Self::Single | Self::Zero => 4,
+            Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
                 // TODO: correct for alignment
