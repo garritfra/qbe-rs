@@ -187,7 +187,7 @@ impl fmt::Display for Instr<'_> {
                 write!(f, "exts{} {}", ty, src)
             }
             Self::Trunc(ty, src) => {
-                if matches!(ty, Type::Double) {
+                if !matches!(ty, Type::Double) {
                     unimplemented!("Truncating other types");
                 }
 
