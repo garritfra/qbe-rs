@@ -84,7 +84,7 @@ pub enum Instr<'a> {
     /// Extend single
     Exts(Type<'a>, Value),
     /// Truncate a double
-    Trunc(Type<'a>, f64),
+    Trunc(Type<'a>, Value),
     /// Convert types
     ///
     /// (From, To, Value).
@@ -191,7 +191,7 @@ impl fmt::Display for Instr<'_> {
                     unimplemented!("Truncating other types");
                 }
 
-                write!(f, "trunc{} d_{}", ty, src)
+                write!(f, "trunc{} {}", ty, src)
             }
             Self::To(from, to, value) => {
                 if matches!(from, Type::Aggregate(_)) || matches!(to, Type::Aggregate(_)) {
@@ -297,7 +297,7 @@ impl fmt::Display for Type<'_> {
 }
 
 /// QBE value that is accepted by instructions
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     /// `%`-temporary
     Temporary(String),
@@ -305,6 +305,8 @@ pub enum Value {
     Global(String),
     /// Constant
     Const(u64),
+    /// Decimals
+    Decimals(f64),
 }
 
 impl fmt::Display for Value {
@@ -313,6 +315,7 @@ impl fmt::Display for Value {
             Self::Temporary(name) => write!(f, "%{}", name),
             Self::Global(name) => write!(f, "${}", name),
             Self::Const(value) => write!(f, "{}", value),
+            Self::Decimals(value) => write!(f, "d_{}", value),
         }
     }
 }
