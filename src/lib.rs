@@ -30,7 +30,7 @@ pub enum Cmp {
 }
 
 /// QBE instruction
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Instr<'a> {
     /// Adds values of two temporaries together
     Add(Value, Value),
@@ -84,7 +84,7 @@ pub enum Instr<'a> {
     /// Extend single
     Exts(Type<'a>, Value),
     /// Truncate a double
-    Trunc(Type<'a>, Value),
+    Trunc(Type<'a>, f64),
     /// Convert types
     ///
     /// (From, To, Value).
@@ -191,7 +191,7 @@ impl fmt::Display for Instr<'_> {
                     unimplemented!("Truncating other types");
                 }
 
-                write!(f, "trunc{} {}", ty, src)
+                write!(f, "trunc{} d_{}", ty, src)
             }
             Self::To(from, to, value) => {
                 if matches!(from, Type::Aggregate(_)) || matches!(to, Type::Aggregate(_)) {
@@ -418,7 +418,7 @@ impl fmt::Display for TypeDef<'_> {
 }
 
 /// An IR statement
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Statement<'a> {
     Assign(Value, Type<'a>, Instr<'a>),
     Volatile(Instr<'a>),
@@ -437,7 +437,7 @@ impl fmt::Display for Statement<'_> {
 }
 
 /// Function block with a label
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Block<'a> {
     /// Label before the block
     pub label: String,
@@ -447,7 +447,7 @@ pub struct Block<'a> {
 }
 
 /// See [`Block::items`];
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum BlockItem<'a> {
     Statement(Statement<'a>),
     Comment(String),
@@ -511,7 +511,7 @@ impl fmt::Display for Block<'_> {
 }
 
 /// QBE function
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Function<'a> {
     /// Function's linkage
     pub linkage: Linkage,
@@ -681,7 +681,7 @@ impl fmt::Display for Linkage {
 }
 
 /// A complete IL file
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Module<'a> {
     functions: Vec<Function<'a>>,
     types: Vec<TypeDef<'a>>,
