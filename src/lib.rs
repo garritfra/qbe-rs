@@ -81,6 +81,8 @@ pub enum Instr<'a> {
     Blit(Value, Value, u64),
     /// Extend a type to another type
     Ext(Type<'a>, Value),
+    /// Extend single
+    Exts(Type<'a>, Value),
     /// Truncate a double
     Trunc(Type<'a>, Value),
     /// Convert types
@@ -176,6 +178,13 @@ impl fmt::Display for Instr<'_> {
                 }
 
                 write!(f, "ext{} {}", ty, src)
+            }
+            Self::Exts(ty, src) => {
+                if matches!(ty, Type::Aggregate(_)) {
+                    unimplemented!("Extend aggregate type");
+                }
+
+                write!(f, "exts{} {}", ty, src)
             }
             Self::Trunc(ty, src) => {
                 if matches!(ty, Type::Double) {
