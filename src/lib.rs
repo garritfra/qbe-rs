@@ -79,6 +79,14 @@ pub enum Instr<'a> {
     /// ## Minimum supported QBE version
     /// `1.1`
     Blit(Value, Value, u64),
+    /// Extend a type to another type
+    Ext(Type<'a>, Value),
+    /// Truncate a double
+    Trunc(Type<'a>, Value),
+    /// Convert types
+    ///
+    /// (From, To, Value).
+    To(Type<'a>, Type<'a>, Value),
 
     /// Debug file.
     DbgFile(String),
@@ -161,6 +169,27 @@ impl fmt::Display for Instr<'_> {
                 }
 
                 write!(f, "load{} {}", ty, src)
+            }
+            Self::Ext(ty, src) => {
+                if matches!(ty, Type::Aggregate(_)) {
+                    unimplemented!("Extend aggregate type");
+                }
+
+                write!(f, "ext{} {}", ty, src)
+            }
+            Self::Trunc(ty, src) => {
+                if matches!(ty, Type::Double) {
+                    unimplemented!("Truncating other types");
+                }
+
+                write!(f, "trunc{} {}", ty, src)
+            }
+            Self::To(from, to, value) => {
+                if matches!(from, Type::Aggregate(_)) || matches!(to, Type::Aggregate(_)) {
+                    unimplemented!("Convert to an aggregate type");
+                }
+
+                write!(f, "{}to{}, {}", from, to, value)
             }
             Self::Blit(src, dst, n) => write!(f, "blit {}, {}, {}", src, dst, n),
         }
