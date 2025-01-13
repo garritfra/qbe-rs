@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+xxx
+
+## [2.3.0] - 2025-01-13
+
 ### Added
 
 -   New `Block::add_comment` API to add comments inside blocks; `Block::items` is now `Vec<BlockItem>` instead of `Vec<Statement>` ([#25](https://github.com/garritfra/qbe-rs/pull/25)).
@@ -12,7 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   New field `Option<u64>` inside `Instr::Call` to specify variadic arguments ([#24](https://github.com/garritfra/qbe-rs/pull/24)).
+-   BREAKING: New field `Option<u64>` inside `Instr::Call` to specify variadic arguments ([#24](https://github.com/garritfra/qbe-rs/pull/24)).
 
 ## [2.2.0] - 2024-10-28
 
