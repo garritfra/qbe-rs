@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   New `Block::add_comment` API to add comments inside blocks; `Block::items` is now `Vec<BlockItem>` instead of `Vec<Statement>` ([#25](https://github.com/garritfra/qbe-rs/pull/25)).
+-   New `Type::Zero` for internal zero-sized type representation. ([#27](https://github.com/garritfra/qbe-rs/pull/27))
+-   Debug instruction support with `Instr::DbgFile` and `Instr::DbgLoc` for source mapping. ([#27](https://github.com/garritfra/qbe-rs/pull/27))
 
 ### Changed
 
