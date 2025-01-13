@@ -415,7 +415,7 @@ pub enum BlockItem<'a> {
     Comment(String),
 }
 
-impl<'a> fmt::Display for BlockItem<'a> {
+impl fmt::Display for BlockItem<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Statement(stmt) => write!(f, "{}", stmt),
