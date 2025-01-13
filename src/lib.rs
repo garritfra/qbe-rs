@@ -30,7 +30,7 @@ pub enum Cmp {
 }
 
 /// QBE instruction
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Instr<'a> {
     /// Adds values of two temporaries together
     Add(Value, Value),
@@ -79,6 +79,16 @@ pub enum Instr<'a> {
     /// ## Minimum supported QBE version
     /// `1.1`
     Blit(Value, Value, u64),
+    /// Extend a type to another type
+    Ext(Type<'a>, Value),
+    /// Extend single
+    Exts(Type<'a>, Value),
+    /// Truncate a double
+    Trunc(Type<'a>, Value),
+    /// Convert types
+    ///
+    /// (From, To, Value).
+    To(Type<'a>, Type<'a>, Value),
 
     /// Debug file.
     DbgFile(String),
@@ -161,6 +171,34 @@ impl fmt::Display for Instr<'_> {
                 }
 
                 write!(f, "load{} {}", ty, src)
+            }
+            Self::Ext(ty, src) => {
+                if matches!(ty, Type::Aggregate(_)) {
+                    unimplemented!("Extend aggregate type");
+                }
+
+                write!(f, "ext{} {}", ty, src)
+            }
+            Self::Exts(ty, src) => {
+                if matches!(ty, Type::Aggregate(_)) {
+                    unimplemented!("Extend aggregate type");
+                }
+
+                write!(f, "exts{} {}", ty, src)
+            }
+            Self::Trunc(ty, src) => {
+                if !matches!(ty, Type::Double) {
+                    unimplemented!("Truncating other types");
+                }
+
+                write!(f, "trunc{} {}", ty, src)
+            }
+            Self::To(from, to, value) => {
+                if matches!(from, Type::Aggregate(_)) || matches!(to, Type::Aggregate(_)) {
+                    unimplemented!("Convert to an aggregate type");
+                }
+
+                write!(f, "{}to{}, {}", from, to, value)
             }
             Self::Blit(src, dst, n) => write!(f, "blit {}, {}, {}", src, dst, n),
         }
@@ -259,7 +297,7 @@ impl fmt::Display for Type<'_> {
 }
 
 /// QBE value that is accepted by instructions
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     /// `%`-temporary
     Temporary(String),
@@ -267,6 +305,8 @@ pub enum Value {
     Global(String),
     /// Constant
     Const(u64),
+    /// Decimals
+    Decimals(f64),
 }
 
 impl fmt::Display for Value {
@@ -275,6 +315,7 @@ impl fmt::Display for Value {
             Self::Temporary(name) => write!(f, "%{}", name),
             Self::Global(name) => write!(f, "${}", name),
             Self::Const(value) => write!(f, "{}", value),
+            Self::Decimals(value) => write!(f, "d_{}", value),
         }
     }
 }
@@ -380,7 +421,7 @@ impl fmt::Display for TypeDef<'_> {
 }
 
 /// An IR statement
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Statement<'a> {
     Assign(Value, Type<'a>, Instr<'a>),
     Volatile(Instr<'a>),
@@ -399,7 +440,7 @@ impl fmt::Display for Statement<'_> {
 }
 
 /// Function block with a label
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Block<'a> {
     /// Label before the block
     pub label: String,
@@ -409,7 +450,7 @@ pub struct Block<'a> {
 }
 
 /// See [`Block::items`];
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum BlockItem<'a> {
     Statement(Statement<'a>),
     Comment(String),
@@ -473,7 +514,7 @@ impl fmt::Display for Block<'_> {
 }
 
 /// QBE function
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Function<'a> {
     /// Function's linkage
     pub linkage: Linkage,
@@ -643,7 +684,7 @@ impl fmt::Display for Linkage {
 }
 
 /// A complete IL file
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub struct Module<'a> {
     functions: Vec<Function<'a>>,
     types: Vec<TypeDef<'a>>,
