@@ -683,11 +683,11 @@ impl<'a> Module<'a> {
 
 impl fmt::Display for Module<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for func in self.functions.iter() {
-            writeln!(f, "{}", func)?;
-        }
         for ty in self.types.iter() {
             writeln!(f, "{}", ty)?;
+        }
+        for func in self.functions.iter() {
+            writeln!(f, "{}", func)?;
         }
         for data in self.data.iter() {
             writeln!(f, "{}", data)?;
