@@ -18,6 +18,10 @@ add it as a dependency in your Cargo.toml and off you go.
 If you don't know where to get started, check out the `hello_world` example in
 the `examples/` directory.
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this project.
+
 ## Projects using this crate
 
 This crate is used by the [Antimony](https://github.com/antimony-lang/antimony)
