@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Fixed
+
+- Fixed type definition ordering in `Module::fmt::Display` to ensure type definitions appear before function definitions, which is required by QBE for aggregate types ([#31](https://github.com/garritfra/qbe-rs/pull/31)).
 
 ## [2.3.0] - 2025-01-13
 

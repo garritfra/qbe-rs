@@ -284,3 +284,51 @@ fn variadic_call() {
 
     assert_eq!(instr.to_string(), "call $printf(l $fmt, ..., w 0)");
 }
+
+#[test]
+fn module_fmt_order() {
+    // Create a module
+    let mut module = Module::new();
+    
+    // Add a type definition to the module
+    let typedef = TypeDef {
+        name: "test_type".into(),
+        align: None,
+        items: vec![(Type::Long, 1)],
+    };
+    module.add_type(typedef);
+    
+    // Add a function to the module
+    let mut func = Function::new(
+        Linkage::public(),
+        "test_func",
+        Vec::new(),
+        None
+    );
+    
+    // Add a block to the function and an instruction to the block
+    let block = func.add_block("entry");
+    block.add_instr(Instr::Ret(None));
+    
+    module.add_function(func);
+    
+    // Add some data to the module for completeness
+    let data = DataDef::new(
+        Linkage::private(),
+        "test_data",
+        None,
+        vec![(Type::Word, DataItem::Const(42))]
+    );
+    module.add_data(data);
+    
+    // Format the module to a string
+    let formatted = format!("{}", module);
+    
+    // Verify the order: types, then functions, then data
+    let type_pos = formatted.find("type :test_type").expect("Type definition not found");
+    let func_pos = formatted.find("export function $test_func").expect("Function not found");
+    let data_pos = formatted.find("data $test_data").expect("Data definition not found");
+    
+    assert!(type_pos < func_pos, "Type definition should appear before function");
+    assert!(func_pos < data_pos, "Function should appear before data definition");
+}
