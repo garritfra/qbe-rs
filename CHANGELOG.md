@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+xxx
+
+## [2.4.0] - 2025-02-28
+
 ### Added
 
 - Additional comparison operators: ordered (O), unordered (UO), and unsigned integer comparisons (Ult, Ule, Ugt, Uge)
