@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Added
+
+- Code documentation examples
 
 ## [2.4.0] - 2025-02-28
 

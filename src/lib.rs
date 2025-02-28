@@ -7,12 +7,95 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! # QBE Rust
+//!
+//! A Rust library for programmatically generating QBE Intermediate Language code.
+//!
+//! [QBE](https://c9x.me/compile/) is a compiler backend that transforms simple intermediate
+//! representation (IR) into executable machine code. This library provides Rust data structures
+//! and functions to generate valid QBE IL.
+//!
+//! ## Basic Example
+//!
+//! ```rust
+//! use qbe::{Module, Function, Linkage, Type, Value, Instr};
+//!
+//! // Create a new module
+//! let mut module = Module::new();
+//!
+//! // Add a simple function that returns the sum of two integers
+//! let mut func = Function::new(
+//!     Linkage::public(),
+//!     "add",
+//!     vec![
+//!         (Type::Word, Value::Temporary("a".to_string())),
+//!         (Type::Word, Value::Temporary("b".to_string())),
+//!     ],
+//!     Some(Type::Word),
+//! );
+//!
+//! // Add a block to the function
+//! let mut block = func.add_block("start");
+//!
+//! // Add two arguments and store result in "sum"
+//! block.assign_instr(
+//!     Value::Temporary("sum".to_string()),
+//!     Type::Word,
+//!     Instr::Add(
+//!         Value::Temporary("a".to_string()),
+//!         Value::Temporary("b".to_string()),
+//!     ),
+//! );
+//!
+//! // Return the sum
+//! block.add_instr(Instr::Ret(Some(Value::Temporary("sum".to_string()))));
+//!
+//! // Add the function to the module
+//! module.add_function(func);
+//!
+//! // Generate QBE IL code
+//! println!("{}", module);
+//! ```
+//!
+//! This generates the following QBE IL:
+//! ```ssa
+//! export function w $add(w %a, w %b) {
+//! @start
+//!     %sum =w add %a, %b
+//!     ret %sum
+//! }
+//! ```
+
 use std::fmt;
 
 #[cfg(test)]
 mod tests;
 
-/// QBE comparision
+/// QBE comparison operations used in conditional instructions.
+///
+/// The result of a comparison is 1 if the condition is true, and 0 if false.
+///
+/// # Examples
+///
+/// ```rust
+/// use qbe::{Cmp, Instr, Type, Value};
+///
+/// // Compare if %a is less than %b (signed comparison)
+/// let slt_instr = Instr::Cmp(
+///     Type::Word,
+///     Cmp::Slt,
+///     Value::Temporary("a".to_string()),
+///     Value::Temporary("b".to_string()),
+/// );
+///
+/// // Check if two values are equal
+/// let eq_instr = Instr::Cmp(
+///     Type::Word,
+///     Cmp::Eq,
+///     Value::Temporary("x".to_string()),
+///     Value::Const(0),
+/// );
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Copy)]
 pub enum Cmp {
     /// Returns 1 if first value is less than second, respecting signedness
@@ -41,7 +124,62 @@ pub enum Cmp {
     Uge,
 }
 
-/// QBE instruction
+/// QBE instructions representing operations in the intermediate language.
+///
+/// # Examples
+///
+/// ## Arithmetic Operations
+/// ```rust
+/// use qbe::{Instr, Value};
+///
+/// // Addition: %result = %a + %b
+/// let add = Instr::Add(
+///     Value::Temporary("a".to_string()),
+///     Value::Temporary("b".to_string()),
+/// );
+///
+/// // Multiplication: %result = %x * 5
+/// let mul = Instr::Mul(
+///     Value::Temporary("x".to_string()),
+///     Value::Const(5),
+/// );
+/// ```
+///
+/// ## Memory Operations
+/// ```rust
+/// use qbe::{Instr, Type, Value};
+///
+/// // Allocate 8 bytes on the stack with 8-byte alignment
+/// let alloc = Instr::Alloc8(8);
+///
+/// // Store a word to memory: store %value, %ptr
+/// let store = Instr::Store(
+///     Type::Word,
+///     Value::Temporary("ptr".to_string()),
+///     Value::Temporary("value".to_string()),
+/// );
+///
+/// // Load a word from memory: %result = load %ptr
+/// let load = Instr::Load(
+///     Type::Word,
+///     Value::Temporary("ptr".to_string()),
+/// );
+/// ```
+///
+/// ## Control Flow
+/// ```rust
+/// use qbe::{Instr, Value};
+///
+/// // Conditional jump based on %condition
+/// let branch = Instr::Jnz(
+///     Value::Temporary("condition".to_string()),
+///     "true_branch".to_string(),
+///     "false_branch".to_string(),
+/// );
+///
+/// // Return a value from a function
+/// let ret = Instr::Ret(Some(Value::Temporary("result".to_string())));
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Instr<'a> {
     /// Adds values of two temporaries together
@@ -274,7 +412,45 @@ impl fmt::Display for Instr<'_> {
     }
 }
 
-/// QBE type
+/// QBE types used to specify the size and representation of values.
+///
+/// QBE has a minimal type system with base types and extended types.
+/// Base types are used for temporaries, while extended types can be used
+/// in aggregate types and data definitions.
+///
+/// # Examples
+///
+/// ```rust
+/// use qbe::Type;
+///
+/// // Base types
+/// let word = Type::Word;     // 32-bit integer
+/// let long = Type::Long;     // 64-bit integer
+/// let single = Type::Single; // 32-bit float
+/// let double = Type::Double; // 64-bit float
+///
+/// // Extended types
+/// let byte = Type::Byte;     // 8-bit value
+/// let halfword = Type::Halfword; // 16-bit value
+///
+/// // Get type sizes in bytes
+/// assert_eq!(word.size(), 4);
+/// assert_eq!(byte.size(), 1);
+/// ```
+///
+/// ## Type Conversions
+///
+/// ```rust
+/// use qbe::Type;
+///
+/// // Convert extended type to corresponding base type
+/// let base = Type::Byte.into_base();
+/// assert_eq!(base, Type::Word);
+///
+/// // Convert to ABI-compatible type for function parameters
+/// let abi = Type::SignedByte.into_abi();
+/// assert_eq!(abi, Type::Word);
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Type<'a> {
     // Base types
@@ -508,7 +684,52 @@ impl fmt::Display for Statement<'_> {
     }
 }
 
-/// Function block with a label
+/// A block of QBE instructions with a label.
+///
+/// Blocks are the basic units of control flow in QBE. Each block has a label
+/// that can be the target of jumps, and contains a sequence of instructions.
+/// A block typically ends with a control flow instruction like jump or return.
+///
+/// # Examples
+///
+/// ```rust
+/// use qbe::{Block, BlockItem, Instr, Statement, Type, Value};
+///
+/// // Create a block for a loop body
+/// let mut block = Block {
+///     label: "loop".to_string(),
+///     items: Vec::new(),
+/// };
+///
+/// // Add a helpful comment
+/// block.add_comment("Loop body - increment counter and accumulate sum");
+///
+/// // Increment loop counter: %i = %i + 1
+/// block.assign_instr(
+///     Value::Temporary("i".to_string()),
+///     Type::Word,
+///     Instr::Add(
+///         Value::Temporary("i".to_string()),
+///         Value::Const(1),
+///     ),
+/// );
+///
+/// // Update sum: %sum = %sum + %value
+/// block.assign_instr(
+///     Value::Temporary("sum".to_string()),
+///     Type::Word,
+///     Instr::Add(
+///         Value::Temporary("sum".to_string()),
+///         Value::Temporary("value".to_string()),
+///     ),
+/// );
+///
+/// // Jump to condition check block
+/// block.add_instr(Instr::Jmp("cond".to_string()));
+///
+/// // Check if block ends with a jump (it does)
+/// assert!(block.jumps());
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Block<'a> {
     /// Label before the block
@@ -582,7 +803,52 @@ impl fmt::Display for Block<'_> {
     }
 }
 
-/// QBE function
+/// A QBE function definition.
+///
+/// A function consists of a name, linkage information, arguments, return type,
+/// and a collection of blocks containing the function's implementation.
+///
+/// # Examples
+///
+/// ```rust
+/// use qbe::{Function, Linkage, Type, Value, Instr, Cmp};
+///
+/// // Create a function that checks if a number is even
+/// let mut is_even = Function::new(
+///     Linkage::public(),
+///     "is_even",
+///     vec![(Type::Word, Value::Temporary("n".to_string()))],
+///     Some(Type::Word), // Returns 1 if even, 0 if odd
+/// );
+///
+/// // Add the start block
+/// let mut start = is_even.add_block("start");
+///
+/// // Calculate n % 2 (by using n & 1)
+/// start.assign_instr(
+///     Value::Temporary("remainder".to_string()),
+///     Type::Word,
+///     Instr::And(
+///         Value::Temporary("n".to_string()),
+///         Value::Const(1),
+///     ),
+/// );
+///
+/// // Check if remainder is 0 (even number)
+/// start.assign_instr(
+///     Value::Temporary("is_zero".to_string()),
+///     Type::Word,
+///     Instr::Cmp(
+///         Type::Word,
+///         Cmp::Eq,
+///         Value::Temporary("remainder".to_string()),
+///         Value::Const(0),
+///     ),
+/// );
+///
+/// // Return the result
+/// start.add_instr(Instr::Ret(Some(Value::Temporary("is_zero".to_string()))));
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Function<'a> {
     /// Function's linkage
@@ -789,7 +1055,59 @@ impl fmt::Display for Linkage {
     }
 }
 
-/// A complete IL file
+/// A complete QBE IL module.
+///
+/// A module contains all the functions, data definitions, and type definitions
+/// that make up a QBE IL file. When converted to a string, it produces valid
+/// QBE IL code that can be compiled by QBE.
+///
+/// # Examples
+///
+/// ```rust
+/// use qbe::{Module, Function, DataDef, TypeDef, Linkage, Type, Value, Instr, DataItem};
+///
+/// // Create a new module
+/// let mut module = Module::new();
+///
+/// // Add a string constant
+/// let hello_str = DataDef::new(
+///     Linkage::private(),
+///     "hello",
+///     None,
+///     vec![
+///         (Type::Byte, DataItem::Str("Hello, World!\n".to_string())),
+///         (Type::Byte, DataItem::Const(0)), // Null terminator
+///     ],
+/// );
+/// module.add_data(hello_str);
+///
+/// // Add a main function that prints the string
+/// let mut main = Function::new(
+///     Linkage::public(),
+///     "main",
+///     vec![],
+///     Some(Type::Word),
+/// );
+///
+/// let mut start = main.add_block("start");
+///
+/// // Call printf with the string: %r = call $printf(l $hello)
+/// start.assign_instr(
+///     Value::Temporary("r".to_string()),
+///     Type::Word,
+///     Instr::Call(
+///         "printf".to_string(),
+///         vec![(Type::Long, Value::Global("hello".to_string()))],
+///         None,
+///     ),
+/// );
+///
+/// // Return 0
+/// start.add_instr(Instr::Ret(Some(Value::Const(0))));
+///
+/// // Add the function to the module
+/// module.add_function(main);
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Module<'a> {
     functions: Vec<Function<'a>>,
