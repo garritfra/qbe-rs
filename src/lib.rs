@@ -511,12 +511,21 @@ impl Type<'_> {
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
-                // TODO: correct for alignment
-                let mut sz = 0_u64;
+                let mut offset = 0;
+
+                // calculation taken from: https://en.wikipedia.org/wiki/Data_structure_alignment#Computing%20padding
                 for (item, repeat) in td.items.iter() {
-                    sz += item.size() * (*repeat as u64);
+                    let align = item.align();
+                    let size = *repeat as u64 * item.size();
+                    let padding = (align - (offset % align)) % align;
+                    offset += padding + size;
                 }
-                sz
+
+                let align = self.align();
+                let padding = (align - (offset % align)) % align;
+
+                // size is the final offset with the padding that is left
+                offset + padding
             }
         }
     }
