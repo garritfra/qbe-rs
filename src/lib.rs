@@ -520,6 +520,27 @@ impl Type<'_> {
             }
         }
     }
+
+    /// Returns byte alignment for values of the type
+    pub fn align(&self) -> u64 {
+        match self {
+            Self::Aggregate(td) => {
+                if let Some(align) = td.align {
+                    return align;
+                }
+
+                // the alignment of a type is the maximum alignment of its members
+                // when there's no members, the alignment is usuallly defined to be 1.
+                td.items
+                    .iter()
+                    .map(|item| item.0.align())
+                    .max()
+                    .unwrap_or(1)
+            }
+
+            _ => self.size(),
+        }
+    }
 }
 
 impl fmt::Display for Type<'_> {
