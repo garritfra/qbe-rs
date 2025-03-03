@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Correct size calculation for type definition
+- Correct size calculation for type definition ([#33](https://github.com/garritfra/qbe-rs/pull/33))
 
 ## [2.4.0] - 2025-02-28
 
