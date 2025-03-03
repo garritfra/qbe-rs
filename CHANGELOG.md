@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Code documentation examples
-- Alignment calculation for type definition
+- Alignment calculation for type definition ([#33](https://github.com/garritfra/qbe-rs/pull/33))
 
 ### Fixed
 
