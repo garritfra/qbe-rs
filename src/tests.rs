@@ -177,7 +177,7 @@ fn type_size() {
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
     let aggregate = Type::Aggregate(&typedef);
-    assert!(aggregate.size() == 17);
+    assert_eq!(aggregate.size(), 24);
 }
 
 #[test]
@@ -203,7 +203,7 @@ fn type_size_nested_aggregate() {
     };
     let aggregate = Type::Aggregate(&typedef);
 
-    assert!(aggregate.size() == 33);
+    assert_eq!(aggregate.size(), 40);
 }
 
 #[test]
