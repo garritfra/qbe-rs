@@ -586,6 +586,29 @@ fn variadic_instructions() {
 }
 
 #[test]
+fn phi_instruction() {
+    let phi = Instr::Phi(
+        "ift".into(),
+        Value::Const(2),
+        "iff".into(),
+        Value::Temporary("3".into()),
+    );
+    assert_eq!(format!("{}", phi), "phi @ift 2, @iff %3");
+
+    let phi = Statement::Assign(
+        Value::Temporary("result".into()),
+        Type::Word,
+        Instr::Phi(
+            "start".into(),
+            Value::Temporary("1".into()),
+            "loop".into(),
+            Value::Global("tmp".into()),
+        ),
+    );
+    assert_eq!(format!("{}", phi), "%result =w phi @start %1, @loop $tmp");
+}
+
+#[test]
 fn halt_instruction() {
     let hlt = Statement::Volatile(Instr::Hlt);
     assert_eq!(format!("{}", hlt), "hlt");
