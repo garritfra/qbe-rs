@@ -297,6 +297,10 @@ pub enum Instr<'a> {
     /// Fetches the next argument from a variable argument list
     Vaarg(Type<'a>, Value),
 
+    // Phi instruction
+    /// Selects value based on the control flow path into a block.
+    Phi(String, Value, String, Value),
+
     // Program termination
     /// Terminates the program with an error
     Hlt,
@@ -407,6 +411,13 @@ impl fmt::Display for Instr<'_> {
             Self::Ultof(val) => write!(f, "ultof {}", val),
             Self::Vastart(val) => write!(f, "vastart {}", val),
             Self::Vaarg(ty, val) => write!(f, "vaarg{} {}", ty, val),
+            Self::Phi(label_1, val_if_label_1, label_2, val_if_label_2) => {
+                write!(
+                    f,
+                    "phi @{} {}, @{} {}",
+                    label_1, val_if_label_1, label_2, val_if_label_2
+                )
+            }
             Self::Hlt => write!(f, "hlt"),
         }
     }
