@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Code documentation examples
 - Alignment calculation for type definition ([#33](https://github.com/garritfra/qbe-rs/pull/33))
+- Phi instruction ([#34](https://github.com/garritfra/qbe-rs/pull/34))
 
 ### Fixed
 
