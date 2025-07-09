@@ -724,3 +724,36 @@ fn complex_block_with_multiple_instructions() {
     assert_eq!(lines[4], "\t%cmp_result =w cuos %cast_result, %x");
     assert_eq!(lines[5], "\thlt");
 }
+
+#[test]
+fn assign_instr_aggregate_type_coercion() {
+    let mut block = Block {
+        label: "test_block".into(),
+        items: Vec::new(),
+    };
+
+    let typedef = TypeDef {
+        name: "person".into(),
+        align: None,
+        items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+    };
+
+    block.assign_instr(
+        Value::Temporary("human".into()),
+        Type::Aggregate(&typedef),
+        Instr::Alloc8(Type::Aggregate(&typedef).size()),
+    );
+
+    block.assign_instr(
+        Value::Temporary("result".into()),
+        Type::Aggregate(&typedef),
+        Instr::Call("new_person".into(), vec![], None),
+    );
+
+    let formatted = format!("{block}");
+    let lines: Vec<&str> = formatted.lines().collect();
+
+    assert_eq!(lines[0], "@test_block");
+    assert_eq!(lines[1], "\t%human =l alloc8 24");
+    assert_eq!(lines[2], "\t%result =:person call $new_person()");
+}
