@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - Pin Rust toolchain to 1.88 in `rust-toolchain.toml` ([#37](https://github.com/garritfra/qbe-rs/pull/37))
 
+### Fixed
+
+- `assign_instr` coercing aggregate types to `l` for calls ([#36](https://github.com/garritfra/qbe-rs/pull/36))
+
 ## [2.5.0] - 2025-04-14
 
 ### Added

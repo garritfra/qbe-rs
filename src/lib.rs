@@ -808,10 +808,13 @@ impl<'a> Block<'a> {
 
     /// Adds a new instruction assigned to a temporary
     pub fn assign_instr(&mut self, temp: Value, ty: Type<'a>, instr: Instr<'a>) {
+        let final_type = match instr {
+            Instr::Call(_, _, _) => ty,
+            _ => ty.into_base(),
+        };
+
         self.items.push(BlockItem::Statement(Statement::Assign(
-            temp,
-            ty.into_base(),
-            instr,
+            temp, final_type, instr,
         )));
     }
 
