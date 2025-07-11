@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Pin Rust toolchain to 1.88 in `rust-toolchain.toml` ([#37](https://github.com/garritfra/qbe-rs/pull/37))
+- BREAKING: Support for opaque and union types ([#39](https://github.com/garritfra/qbe-rs/pull/39))
 
 ## [2.5.0] - 2025-04-14
 

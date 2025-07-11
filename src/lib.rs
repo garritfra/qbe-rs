@@ -521,21 +521,33 @@ impl Type<'_> {
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
-                let mut offset = 0;
+                fn size_of_items<'a>(s: &Type<'a>, items: &Vec<(Type<'a>, usize)>) -> u64 {
+                    let mut offset = 0;
 
-                // calculation taken from: https://en.wikipedia.org/wiki/Data_structure_alignment#Computing%20padding
-                for (item, repeat) in td.items.iter() {
-                    let align = item.align();
-                    let size = *repeat as u64 * item.size();
+                    // calculation taken from: https://en.wikipedia.org/wiki/Data_structure_alignment#Computing%20padding
+                    for (item, repeat) in items.iter() {
+                        let align = item.align();
+                        let size = *repeat as u64 * item.size();
+                        let padding = (align - (offset % align)) % align;
+                        offset += padding + size;
+                    }
+
+                    let align = s.align();
                     let padding = (align - (offset % align)) % align;
-                    offset += padding + size;
+
+                    // size is the final offset with the padding that is left
+                    offset + padding
                 }
 
-                let align = self.align();
-                let padding = (align - (offset % align)) % align;
-
-                // size is the final offset with the padding that is left
-                offset + padding
+                match td {
+                    TypeDef::Regular { items, .. } => size_of_items(self, items),
+                    TypeDef::Union { variations, .. } => variations
+                        .iter()
+                        .map(|items| size_of_items(self, items))
+                        .max()
+                        .unwrap_or(0),
+                    TypeDef::Opaque { size, .. } => *size,
+                }
             }
         }
     }
@@ -544,17 +556,35 @@ impl Type<'_> {
     pub fn align(&self) -> u64 {
         match self {
             Self::Aggregate(td) => {
-                if let Some(align) = td.align {
-                    return align;
+                fn align_of_items<'a>(items: &Vec<(Type<'a>, usize)>) -> u64 {
+                    // the alignment of a type is the maximum alignment of its members
+                    // when there's no members, the alignment is usuallly defined to be 1.
+                    items.iter().map(|item| item.0.align()).max().unwrap_or(1)
                 }
 
-                // the alignment of a type is the maximum alignment of its members
-                // when there's no members, the alignment is usuallly defined to be 1.
-                td.items
-                    .iter()
-                    .map(|item| item.0.align())
-                    .max()
-                    .unwrap_or(1)
+                match td {
+                    TypeDef::Regular { align, items, .. } => {
+                        if let Some(align) = align {
+                            return *align;
+                        }
+
+                        align_of_items(items)
+                    }
+                    TypeDef::Union {
+                        align,
+                        variations: items,
+                        ..
+                    } => {
+                        if let Some(align) = align {
+                            return *align;
+                        }
+
+                        // the alignment of a union is the maximum alignment of its variations
+                        // when there's no variations, the alignment is usuallly defined to be 1.
+                        items.iter().map(align_of_items).max().unwrap_or(1)
+                    }
+                    TypeDef::Opaque { align, .. } => *align,
+                }
             }
 
             _ => self.size(),
@@ -576,7 +606,7 @@ impl fmt::Display for Type<'_> {
             Self::Single => write!(f, "s"),
             Self::Double => write!(f, "d"),
             Self::Zero => write!(f, "z"),
-            Self::Aggregate(td) => write!(f, ":{}", td.name),
+            Self::Aggregate(td) => write!(f, ":{}", td.ident()),
         }
     }
 }
@@ -674,34 +704,78 @@ impl fmt::Display for DataItem {
 }
 
 /// QBE aggregate type definition
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
-pub struct TypeDef<'a> {
-    pub name: String,
-    pub align: Option<u64>,
-    // TODO: Opaque types?
-    pub items: Vec<(Type<'a>, usize)>,
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub enum TypeDef<'a> {
+    Regular {
+        ident: String,
+        align: Option<u64>,
+        items: Vec<(Type<'a>, usize)>,
+    },
+    Union {
+        ident: String,
+        align: Option<u64>,
+        variations: Vec<Vec<(Type<'a>, usize)>>,
+    },
+    Opaque {
+        ident: String,
+        align: u64,
+        size: u64,
+    },
+}
+
+impl TypeDef<'_> {
+    pub fn ident(&self) -> &str {
+        match self {
+            TypeDef::Regular { ident, .. } => ident,
+            TypeDef::Union { ident, .. } => ident,
+            TypeDef::Opaque { ident, .. } => ident,
+        }
+    }
 }
 
 impl fmt::Display for TypeDef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "type :{} = ", self.name)?;
-        if let Some(align) = self.align {
+        write!(f, "type :{} = ", self.ident())?;
+
+        let align = match self {
+            TypeDef::Regular { align, .. } => *align,
+            TypeDef::Union { align, .. } => *align,
+            TypeDef::Opaque { align, .. } => Some(*align),
+        };
+
+        if let Some(align) = align {
             write!(f, "align {align} ")?;
         }
 
-        write!(
-            f,
-            "{{ {} }}",
-            self.items
+        fn format<'a>(items: &Vec<(Type<'a>, usize)>) -> String {
+            items
                 .iter()
-                .map(|(ty, count)| if *count > 1 {
-                    format!("{ty} {count}")
-                } else {
-                    format!("{ty}")
+                .map(|(ty, count)| {
+                    if *count > 1 {
+                        format!("{ty} {count}")
+                    } else {
+                        format!("{ty}")
+                    }
                 })
                 .collect::<Vec<String>>()
-                .join(", "),
-        )
+                .join(", ")
+        }
+
+        match self {
+            TypeDef::Regular { items, .. } => {
+                write!(f, "{{ {} }}", format(items))
+            }
+            TypeDef::Union { variations, .. } => write!(
+                f,
+                "{{ {} }}",
+                variations
+                    .iter()
+                    .map(|items| format!("{{ {} }}", format(items)))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            ),
+            TypeDef::Opaque { size, .. } => write!(f, "{{ {size} }}"),
+        }
     }
 }
 

@@ -143,9 +143,9 @@ fn datadef_new_equivalence() {
 }
 
 #[test]
-fn typedef() {
-    let typedef = TypeDef {
-        name: "person".into(),
+fn typedef_regular() {
+    let typedef = TypeDef::Regular {
+        ident: "person".into(),
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
@@ -153,9 +153,65 @@ fn typedef() {
     let formatted = format!("{typedef}");
     assert_eq!(formatted, "type :person = { l, w 2, b }");
 
+    let typedef_with_align = TypeDef::Regular {
+        ident: "person".into(),
+        align: Some(8),
+        items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+    };
+
+    let formatted = format!("{typedef_with_align}");
+    assert_eq!(formatted, "type :person = align 8 { l, w 2, b }");
+
     let ty = Type::Aggregate(&typedef);
     let formatted = format!("{ty}");
     assert_eq!(formatted, ":person");
+}
+
+#[test]
+fn typedef_union() {
+    let typedef = TypeDef::Union {
+        ident: "data".into(),
+        align: None,
+        variations: vec![
+            vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+            vec![(Type::Long, 2)],
+        ],
+    };
+
+    let formatted = format!("{typedef}");
+    assert_eq!(formatted, "type :data = { { l, w 2, b } { l 2 } }");
+
+    let typedef_with_align = TypeDef::Union {
+        ident: "data".into(),
+        align: Some(8),
+        variations: vec![
+            vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+            vec![(Type::Long, 2)],
+        ],
+    };
+
+    let formatted = format!("{typedef_with_align}");
+    assert_eq!(formatted, "type :data = align 8 { { l, w 2, b } { l 2 } }");
+
+    let ty = Type::Aggregate(&typedef);
+    let formatted = format!("{ty}");
+    assert_eq!(formatted, ":data");
+}
+
+#[test]
+fn typedef_opaque() {
+    let typedef = TypeDef::Opaque {
+        ident: "data".into(),
+        align: 8,
+        size: 64,
+    };
+
+    let formatted = format!("{typedef}");
+    assert_eq!(formatted, "type :data = align 8 { 64 }");
+
+    let ty = Type::Aggregate(&typedef);
+    let formatted = format!("{ty}");
+    assert_eq!(formatted, ":data");
 }
 
 #[test]
@@ -171,19 +227,79 @@ fn type_size() {
     assert!(Type::Long.size() == 8);
     assert!(Type::Double.size() == 8);
 
-    let typedef = TypeDef {
-        name: "person".into(),
+    let typedef_regular = TypeDef::Regular {
+        ident: "person".into(),
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
-    let aggregate = Type::Aggregate(&typedef);
+    let aggregate = Type::Aggregate(&typedef_regular);
     assert_eq!(aggregate.size(), 24);
+
+    let typedef_union = TypeDef::Union {
+        ident: "data".into(),
+        align: None,
+        variations: vec![
+            vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+            vec![(Type::Long, 5)],
+        ],
+    };
+    let aggregate = Type::Aggregate(&typedef_union);
+    assert_eq!(aggregate.size(), 40);
+
+    let typedef_opaque = TypeDef::Opaque {
+        ident: "data".into(),
+        align: 8,
+        size: 64,
+    };
+    let aggregate = Type::Aggregate(&typedef_opaque);
+    assert_eq!(aggregate.size(), 64);
+}
+
+#[test]
+fn type_align() {
+    assert!(Type::Byte.align() == 1);
+    assert!(Type::SignedByte.align() == 1);
+    assert!(Type::UnsignedByte.align() == 1);
+    assert!(Type::Halfword.align() == 2);
+    assert!(Type::SignedHalfword.align() == 2);
+    assert!(Type::UnsignedHalfword.align() == 2);
+    assert!(Type::Word.align() == 4);
+    assert!(Type::Single.align() == 4);
+    assert!(Type::Long.align() == 8);
+    assert!(Type::Double.align() == 8);
+
+    let typedef_regular = TypeDef::Regular {
+        ident: "person".into(),
+        align: None,
+        items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
+    };
+    let aggregate = Type::Aggregate(&typedef_regular);
+    assert_eq!(aggregate.align(), 8);
+
+    let typedef_union = TypeDef::Union {
+        ident: "data".into(),
+        align: None,
+        variations: vec![
+            vec![(Type::Word, 1), (Type::Word, 2), (Type::Byte, 1)],
+            vec![(Type::Long, 5)],
+        ],
+    };
+    let aggregate = Type::Aggregate(&typedef_union);
+    assert_eq!(aggregate.align(), 8);
+
+    let typedef_opaque = TypeDef::Opaque {
+        ident: "data".into(),
+        align: 8,
+        size: 64,
+    };
+    let aggregate = Type::Aggregate(&typedef_opaque);
+    assert_eq!(aggregate.align(), 8);
 }
 
 #[test]
 fn type_size_nested_aggregate() {
-    let inner = TypeDef {
-        name: "dog".into(),
+    let inner = TypeDef::Regular {
+        ident: "dog".into(),
         align: None,
         items: vec![(Type::Long, 2)],
     };
@@ -191,8 +307,8 @@ fn type_size_nested_aggregate() {
 
     assert!(inner_aggregate.size() == 16);
 
-    let typedef = TypeDef {
-        name: "person".into(),
+    let typedef = TypeDef::Regular {
+        ident: "person".into(),
         align: None,
         items: vec![
             (Type::Long, 1),
@@ -214,8 +330,8 @@ fn type_into_abi() {
     unchanged(Type::Long);
     unchanged(Type::Single);
     unchanged(Type::Double);
-    let typedef = TypeDef {
-        name: "foo".into(),
+    let typedef = TypeDef::Regular {
+        ident: "foo".into(),
         align: None,
         items: Vec::new(),
     };
@@ -246,8 +362,8 @@ fn type_into_base() {
     assert_eq!(Type::Halfword.into_base(), Type::Word);
     assert_eq!(Type::UnsignedHalfword.into_base(), Type::Word);
     assert_eq!(Type::SignedHalfword.into_base(), Type::Word);
-    let typedef = TypeDef {
-        name: "foo".into(),
+    let typedef = TypeDef::Regular {
+        ident: "foo".into(),
         align: None,
         items: Vec::new(),
     };
@@ -291,8 +407,8 @@ fn module_fmt_order() {
     let mut module = Module::new();
 
     // Add a type definition to the module
-    let typedef = TypeDef {
-        name: "test_type".into(),
+    let typedef = TypeDef::Regular {
+        ident: "test_type".into(),
         align: None,
         items: vec![(Type::Long, 1)],
     };
