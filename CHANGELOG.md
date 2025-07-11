@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Added
+
+- Pin Rust toolchain to 1.88 in `rust-toolchain.toml` ([#37](https://github.com/garritfra/qbe-rs/pull/37))
 
 ## [2.5.0] - 2025-04-14
 
