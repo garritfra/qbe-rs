@@ -309,11 +309,11 @@ pub enum Instr<'a> {
 impl fmt::Display for Instr<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Add(lhs, rhs) => write!(f, "add {}, {}", lhs, rhs),
-            Self::Sub(lhs, rhs) => write!(f, "sub {}, {}", lhs, rhs),
-            Self::Mul(lhs, rhs) => write!(f, "mul {}, {}", lhs, rhs),
-            Self::Div(lhs, rhs) => write!(f, "div {}, {}", lhs, rhs),
-            Self::Rem(lhs, rhs) => write!(f, "rem {}, {}", lhs, rhs),
+            Self::Add(lhs, rhs) => write!(f, "add {lhs}, {rhs}"),
+            Self::Sub(lhs, rhs) => write!(f, "sub {lhs}, {rhs}"),
+            Self::Mul(lhs, rhs) => write!(f, "mul {lhs}, {rhs}"),
+            Self::Div(lhs, rhs) => write!(f, "div {lhs}, {rhs}"),
+            Self::Rem(lhs, rhs) => write!(f, "rem {lhs}, {rhs}"),
             Self::Cmp(ty, cmp, lhs, rhs) => {
                 assert!(
                     !matches!(ty, Type::Aggregate(_)),
@@ -342,26 +342,26 @@ impl fmt::Display for Instr<'_> {
                     rhs,
                 )
             }
-            Self::And(lhs, rhs) => write!(f, "and {}, {}", lhs, rhs),
-            Self::Or(lhs, rhs) => write!(f, "or {}, {}", lhs, rhs),
-            Self::Copy(val) => write!(f, "copy {}", val),
+            Self::And(lhs, rhs) => write!(f, "and {lhs}, {rhs}"),
+            Self::Or(lhs, rhs) => write!(f, "or {lhs}, {rhs}"),
+            Self::Copy(val) => write!(f, "copy {val}"),
             Self::Ret(val) => match val {
-                Some(val) => write!(f, "ret {}", val),
+                Some(val) => write!(f, "ret {val}"),
                 None => write!(f, "ret"),
             },
-            Self::DbgFile(val) => write!(f, r#"dbgfile "{}""#, val),
+            Self::DbgFile(val) => write!(f, r#"dbgfile "{val}""#),
             Self::DbgLoc(lineno, column) => match column {
-                Some(val) => write!(f, "dbgloc {}, {}", lineno, val),
-                None => write!(f, "dbgloc {}", lineno),
+                Some(val) => write!(f, "dbgloc {lineno}, {val}"),
+                None => write!(f, "dbgloc {lineno}"),
             },
             Self::Jnz(val, if_nonzero, if_zero) => {
-                write!(f, "jnz {}, @{}, @{}", val, if_nonzero, if_zero)
+                write!(f, "jnz {val}, @{if_nonzero}, @{if_zero}")
             }
-            Self::Jmp(label) => write!(f, "jmp @{}", label),
+            Self::Jmp(label) => write!(f, "jmp @{label}"),
             Self::Call(name, args, opt_variadic_i) => {
                 let mut args_fmt = args
                     .iter()
-                    .map(|(ty, temp)| format!("{} {}", ty, temp))
+                    .map(|(ty, temp)| format!("{ty} {temp}"))
                     .collect::<Vec<String>>();
                 if let Some(i) = *opt_variadic_i {
                     args_fmt.insert(i as usize, "...".to_string());
@@ -369,53 +369,52 @@ impl fmt::Display for Instr<'_> {
 
                 write!(f, "call ${}({})", name, args_fmt.join(", "),)
             }
-            Self::Alloc4(size) => write!(f, "alloc4 {}", size),
-            Self::Alloc8(size) => write!(f, "alloc8 {}", size),
-            Self::Alloc16(size) => write!(f, "alloc16 {}", size),
+            Self::Alloc4(size) => write!(f, "alloc4 {size}"),
+            Self::Alloc8(size) => write!(f, "alloc8 {size}"),
+            Self::Alloc16(size) => write!(f, "alloc16 {size}"),
             Self::Store(ty, dest, value) => {
                 if matches!(ty, Type::Aggregate(_)) {
                     unimplemented!("Store to an aggregate type");
                 }
 
-                write!(f, "store{} {}, {}", ty, value, dest)
+                write!(f, "store{ty} {value}, {dest}")
             }
             Self::Load(ty, src) => {
                 if matches!(ty, Type::Aggregate(_)) {
                     unimplemented!("Load aggregate type");
                 }
 
-                write!(f, "load{} {}", ty, src)
+                write!(f, "load{ty} {src}")
             }
-            Self::Blit(src, dst, n) => write!(f, "blit {}, {}, {}", src, dst, n),
-            Self::Udiv(lhs, rhs) => write!(f, "udiv {}, {}", lhs, rhs),
-            Self::Urem(lhs, rhs) => write!(f, "urem {}, {}", lhs, rhs),
-            Self::Sar(lhs, rhs) => write!(f, "sar {}, {}", lhs, rhs),
-            Self::Shr(lhs, rhs) => write!(f, "shr {}, {}", lhs, rhs),
-            Self::Shl(lhs, rhs) => write!(f, "shl {}, {}", lhs, rhs),
-            Self::Cast(val) => write!(f, "cast {}", val),
-            Self::Extsw(val) => write!(f, "extsw {}", val),
-            Self::Extuw(val) => write!(f, "extuw {}", val),
-            Self::Extsh(val) => write!(f, "extsh {}", val),
-            Self::Extuh(val) => write!(f, "extuh {}", val),
-            Self::Extsb(val) => write!(f, "extsb {}", val),
-            Self::Extub(val) => write!(f, "extub {}", val),
-            Self::Exts(val) => write!(f, "exts {}", val),
-            Self::Truncd(val) => write!(f, "truncd {}", val),
-            Self::Stosi(val) => write!(f, "stosi {}", val),
-            Self::Stoui(val) => write!(f, "stoui {}", val),
-            Self::Dtosi(val) => write!(f, "dtosi {}", val),
-            Self::Dtoui(val) => write!(f, "dtoui {}", val),
-            Self::Swtof(val) => write!(f, "swtof {}", val),
-            Self::Uwtof(val) => write!(f, "uwtof {}", val),
-            Self::Sltof(val) => write!(f, "sltof {}", val),
-            Self::Ultof(val) => write!(f, "ultof {}", val),
-            Self::Vastart(val) => write!(f, "vastart {}", val),
-            Self::Vaarg(ty, val) => write!(f, "vaarg{} {}", ty, val),
+            Self::Blit(src, dst, n) => write!(f, "blit {src}, {dst}, {n}"),
+            Self::Udiv(lhs, rhs) => write!(f, "udiv {lhs}, {rhs}"),
+            Self::Urem(lhs, rhs) => write!(f, "urem {lhs}, {rhs}"),
+            Self::Sar(lhs, rhs) => write!(f, "sar {lhs}, {rhs}"),
+            Self::Shr(lhs, rhs) => write!(f, "shr {lhs}, {rhs}"),
+            Self::Shl(lhs, rhs) => write!(f, "shl {lhs}, {rhs}"),
+            Self::Cast(val) => write!(f, "cast {val}"),
+            Self::Extsw(val) => write!(f, "extsw {val}"),
+            Self::Extuw(val) => write!(f, "extuw {val}"),
+            Self::Extsh(val) => write!(f, "extsh {val}"),
+            Self::Extuh(val) => write!(f, "extuh {val}"),
+            Self::Extsb(val) => write!(f, "extsb {val}"),
+            Self::Extub(val) => write!(f, "extub {val}"),
+            Self::Exts(val) => write!(f, "exts {val}"),
+            Self::Truncd(val) => write!(f, "truncd {val}"),
+            Self::Stosi(val) => write!(f, "stosi {val}"),
+            Self::Stoui(val) => write!(f, "stoui {val}"),
+            Self::Dtosi(val) => write!(f, "dtosi {val}"),
+            Self::Dtoui(val) => write!(f, "dtoui {val}"),
+            Self::Swtof(val) => write!(f, "swtof {val}"),
+            Self::Uwtof(val) => write!(f, "uwtof {val}"),
+            Self::Sltof(val) => write!(f, "sltof {val}"),
+            Self::Ultof(val) => write!(f, "ultof {val}"),
+            Self::Vastart(val) => write!(f, "vastart {val}"),
+            Self::Vaarg(ty, val) => write!(f, "vaarg{ty} {val}"),
             Self::Phi(label_1, val_if_label_1, label_2, val_if_label_2) => {
                 write!(
                     f,
-                    "phi @{} {}, @{} {}",
-                    label_1, val_if_label_1, label_2, val_if_label_2
+                    "phi @{label_1} {val_if_label_1}, @{label_2} {val_if_label_2}"
                 )
             }
             Self::Hlt => write!(f, "hlt"),
@@ -596,9 +595,9 @@ pub enum Value {
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Temporary(name) => write!(f, "%{}", name),
-            Self::Global(name) => write!(f, "${}", name),
-            Self::Const(value) => write!(f, "{}", value),
+            Self::Temporary(name) => write!(f, "%{name}"),
+            Self::Global(name) => write!(f, "${name}"),
+            Self::Const(value) => write!(f, "{value}"),
         }
     }
 }
@@ -633,14 +632,14 @@ impl fmt::Display for DataDef<'_> {
         write!(f, "{}data ${} = ", self.linkage, self.name)?;
 
         if let Some(align) = self.align {
-            write!(f, "align {} ", align)?;
+            write!(f, "align {align} ")?;
         }
         write!(
             f,
             "{{ {} }}",
             self.items
                 .iter()
-                .map(|(ty, item)| format!("{} {}", ty, item))
+                .map(|(ty, item)| format!("{ty} {item}"))
                 .collect::<Vec<String>>()
                 .join(", ")
         )
@@ -664,12 +663,12 @@ impl fmt::Display for DataItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Symbol(name, offset) => match offset {
-                Some(off) => write!(f, "${} +{}", name, off),
-                None => write!(f, "${}", name),
+                Some(off) => write!(f, "${name} +{off}"),
+                None => write!(f, "${name}"),
             },
-            Self::Str(string) => write!(f, "\"{}\"", string),
-            Self::Const(val) => write!(f, "{}", val),
-            Self::Zero(size) => write!(f, "z {}", size),
+            Self::Str(string) => write!(f, "\"{string}\""),
+            Self::Const(val) => write!(f, "{val}"),
+            Self::Zero(size) => write!(f, "z {size}"),
         }
     }
 }
@@ -687,7 +686,7 @@ impl fmt::Display for TypeDef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "type :{} = ", self.name)?;
         if let Some(align) = self.align {
-            write!(f, "align {} ", align)?;
+            write!(f, "align {align} ")?;
         }
 
         write!(
@@ -696,9 +695,9 @@ impl fmt::Display for TypeDef<'_> {
             self.items
                 .iter()
                 .map(|(ty, count)| if *count > 1 {
-                    format!("{} {}", ty, count)
+                    format!("{ty} {count}")
                 } else {
-                    format!("{}", ty)
+                    format!("{ty}")
                 })
                 .collect::<Vec<String>>()
                 .join(", "),
@@ -718,9 +717,9 @@ impl fmt::Display for Statement<'_> {
         match self {
             Self::Assign(temp, ty, instr) => {
                 assert!(matches!(temp, Value::Temporary(_)));
-                write!(f, "{} ={} {}", temp, ty, instr)
+                write!(f, "{temp} ={ty} {instr}")
             }
-            Self::Volatile(instr) => write!(f, "{}", instr),
+            Self::Volatile(instr) => write!(f, "{instr}"),
         }
     }
 }
@@ -790,8 +789,8 @@ pub enum BlockItem<'a> {
 impl fmt::Display for BlockItem<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Statement(stmt) => write!(f, "{}", stmt),
-            Self::Comment(comment) => write!(f, "# {}", comment),
+            Self::Statement(stmt) => write!(f, "{stmt}"),
+            Self::Comment(comment) => write!(f, "# {comment}"),
         }
     }
 }
@@ -837,7 +836,7 @@ impl fmt::Display for Block<'_> {
             "{}",
             self.items
                 .iter()
-                .map(|instr| format!("\t{}", instr))
+                .map(|instr| format!("\t{instr}"))
                 .collect::<Vec<String>>()
                 .join("\n")
         )
@@ -966,7 +965,7 @@ impl fmt::Display for Function<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}function", self.linkage)?;
         if let Some(ty) = &self.return_ty {
-            write!(f, " {}", ty)?;
+            write!(f, " {ty}")?;
         }
 
         writeln!(
@@ -976,13 +975,13 @@ impl fmt::Display for Function<'_> {
             args = self
                 .arguments
                 .iter()
-                .map(|(ty, temp)| format!("{} {}", ty, temp))
+                .map(|(ty, temp)| format!("{ty} {temp}"))
                 .collect::<Vec<String>>()
                 .join(", "),
         )?;
 
         for blk in self.blocks.iter() {
-            writeln!(f, "{}", blk)?;
+            writeln!(f, "{blk}")?;
         }
 
         write!(f, "}}")
@@ -1085,9 +1084,9 @@ impl fmt::Display for Linkage {
         }
         if let Some(section) = &self.section {
             // TODO: escape it, possibly
-            write!(f, "section \"{}\"", section)?;
+            write!(f, "section \"{section}\"")?;
             if let Some(secflags) = &self.secflags {
-                write!(f, " \"{}\"", secflags)?;
+                write!(f, " \"{secflags}\"")?;
             }
             write!(f, " ")?;
         }
@@ -1190,13 +1189,13 @@ impl<'a> Module<'a> {
 impl fmt::Display for Module<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for ty in self.types.iter() {
-            writeln!(f, "{}", ty)?;
+            writeln!(f, "{ty}")?;
         }
         for func in self.functions.iter() {
-            writeln!(f, "{}", func)?;
+            writeln!(f, "{func}")?;
         }
         for data in self.data.iter() {
-            writeln!(f, "{}", data)?;
+            writeln!(f, "{data}")?;
         }
         Ok(())
     }

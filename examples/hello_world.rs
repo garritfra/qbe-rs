@@ -64,5 +64,5 @@ fn main() {
     generate_add_func(&mut module);
     generate_main_func(&mut module);
     generate_data(&mut module);
-    println!("{}", module);
+    println!("{module}");
 }
