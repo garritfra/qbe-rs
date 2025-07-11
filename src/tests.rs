@@ -635,10 +635,7 @@ fn thread_local_linkage() {
         align: None,
         items: vec![(Type::Word, DataItem::Const(42))],
     };
-    assert_eq!(
-        format!("{data_def}"),
-        "thread data $thread_var = { w 42 }"
-    );
+    assert_eq!(format!("{data_def}"), "thread data $thread_var = { w 42 }");
 }
 
 #[test]
