@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 - Add `Neg` and `Xor` instructions
 - BREAKING: `Phi` instruction now accepts `Vec(String, Value)` to support multiple arguments
+- BREAKING: Support for opaque and union types ([#39](https://github.com/garritfra/qbe-rs/pull/39))
 
 ### Internal
 

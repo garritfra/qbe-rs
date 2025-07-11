@@ -866,8 +866,8 @@ fn assign_instr_aggregate_type_coercion() {
         items: Vec::new(),
     };
 
-    let typedef = TypeDef {
-        name: "person".into(),
+    let typedef = TypeDef::Regular {
+        ident: "person".into(),
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
