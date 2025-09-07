@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Pin Rust toolchain to 1.88 in `rust-toolchain.toml` ([#37](https://github.com/garritfra/qbe-rs/pull/37))
+- Made `Module` fields public
 
 ### Fixed
 
