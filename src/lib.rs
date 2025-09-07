@@ -1153,9 +1153,9 @@ impl fmt::Display for Linkage {
 /// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Module<'a> {
-    functions: Vec<Function<'a>>,
-    types: Vec<TypeDef<'a>>,
-    data: Vec<DataDef<'a>>,
+    pub functions: Vec<Function<'a>>,
+    pub types: Vec<TypeDef<'a>>,
+    pub data: Vec<DataDef<'a>>,
 }
 
 impl<'a> Module<'a> {
