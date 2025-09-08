@@ -2,7 +2,7 @@
 
 1. **Optional**: Use the
    [cargo-public-api](https://crates.io/crates/cargo-public-api) crate to spot
-   possible breaking changes
+   possible breaking changes: `cargo public-api diff <latest version>`
 1. Update version in `Cargo.toml`
 1. Add entry in `CHANGELOG.md`
 1. Commit change with semantic version number (e.g.: `v0.1.1`)
