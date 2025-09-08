@@ -941,7 +941,7 @@ impl<'a> Function<'a> {
         since = "3.0.0",
         note = "Use `self.blocks.last()` or `self.blocks.last_mut()` instead."
     )]
-    pub fn last_block(&mut self) -> &Block {
+    pub fn last_block(&mut self) -> &Block<'a> {
         self.blocks
             .last()
             .expect("Function must have at least one block")

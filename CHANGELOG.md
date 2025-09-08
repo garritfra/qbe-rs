@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Internal
+
+- Update Rust toolchain to 1.89
 
 ## [2.5.1] - 2025-08-08
 
