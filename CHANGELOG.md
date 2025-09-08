@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Internal
 
-- Update Rust toolchain to 1.89
+- Update Rust toolchain to 1.89 ([#44](https://github.com/garritfra/qbe-rs/pull/44))
 
 ## [2.5.1] - 2025-08-08
 
