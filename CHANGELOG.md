@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Added `Neg` and `Xor` instructions
+
 ### Internal
 
 - Update Rust toolchain to 1.89 ([#44](https://github.com/garritfra/qbe-rs/pull/44))
