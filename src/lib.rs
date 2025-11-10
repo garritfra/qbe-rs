@@ -198,6 +198,10 @@ pub enum Instr<'a> {
     And(Value, Value),
     /// Performs a bitwise OR on values
     Or(Value, Value),
+    /// Performs a bitwise XOR on values
+    Xor(Value, Value),
+    /// Negates a value
+    Neg(Value),
     /// Copies either a temporary or a literal value
     Copy(Value),
     /// Return from a function, optionally with a value
@@ -344,6 +348,8 @@ impl fmt::Display for Instr<'_> {
             }
             Self::And(lhs, rhs) => write!(f, "and {lhs}, {rhs}"),
             Self::Or(lhs, rhs) => write!(f, "or {lhs}, {rhs}"),
+            Self::Xor(lhs, rhs) => write!(f, "xor {lhs}, {rhs}"),
+            Self::Neg(val) => write!(f, "neg {val}"),
             Self::Copy(val) => write!(f, "copy {val}"),
             Self::Ret(val) => match val {
                 Some(val) => write!(f, "ret {val}"),
