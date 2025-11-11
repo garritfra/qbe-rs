@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-- Added `Neg` and `Xor` instructions
+- Add `Neg` and `Xor` instructions
 
 ### Internal
 
