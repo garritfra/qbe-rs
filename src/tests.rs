@@ -587,25 +587,43 @@ fn variadic_instructions() {
 
 #[test]
 fn phi_instruction() {
-    let phi = Instr::Phi(
-        "ift".into(),
-        Value::Const(2),
-        "iff".into(),
-        Value::Temporary("3".into()),
-    );
+    let phi = Instr::Phi(vec![
+        ("ift".into(), Value::Const(2)),
+        ("iff".into(), Value::Temporary("3".into())),
+    ]);
     assert_eq!(format!("{phi}"), "phi @ift 2, @iff %3");
 
     let phi = Statement::Assign(
         Value::Temporary("result".into()),
         Type::Word,
-        Instr::Phi(
-            "start".into(),
-            Value::Temporary("1".into()),
-            "loop".into(),
-            Value::Global("tmp".into()),
-        ),
+        Instr::Phi(vec![
+            ("start".into(), Value::Temporary("1".into())),
+            ("loop".into(), Value::Global("tmp".into())),
+        ]),
     );
     assert_eq!(format!("{phi}"), "%result =w phi @start %1, @loop $tmp");
+
+    let phi = Instr::Phi(vec![
+        ("case1".into(), Value::Const(10)),
+        ("case2".into(), Value::Const(20)),
+        ("case3".into(), Value::Const(30)),
+    ]);
+    assert_eq!(format!("{phi}"), "phi @case1 10, @case2 20, @case3 30");
+
+    let phi = Statement::Assign(
+        Value::Temporary("merged".into()),
+        Type::Long,
+        Instr::Phi(vec![
+            ("path_a".into(), Value::Temporary("x".into())),
+            ("path_b".into(), Value::Temporary("y".into())),
+            ("path_c".into(), Value::Global("global_val".into())),
+            ("path_d".into(), Value::Const(42)),
+        ]),
+    );
+    assert_eq!(
+        format!("{phi}"),
+        "%merged =l phi @path_a %x, @path_b %y, @path_c $global_val, @path_d 42"
+    );
 }
 
 #[test]
