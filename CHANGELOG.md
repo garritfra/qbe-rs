@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - Add `Neg` and `Xor` instructions
+- BREAKING: `Phi` instruction now accepts `Vec(String, Value)` to support multiple arguments
 
 ### Internal
 
