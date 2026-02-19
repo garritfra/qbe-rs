@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+xxx
+
+## [3.0.0] - 2026-02-19
+
 ### Added
 
 - Add `Neg` and `Xor` instructions ([#46](https://github.com/garritfra/qbe-rs/pull/46))
