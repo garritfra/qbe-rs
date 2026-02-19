@@ -4,8 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-- Add `Neg` and `Xor` instructions
-- BREAKING: `Phi` instruction now accepts `Vec(String, Value)` to support multiple arguments
+### Added
+
+- Add `Neg` and `Xor` instructions ([#46](https://github.com/garritfra/qbe-rs/pull/46))
+
+### Changed
+
+- BREAKING: `Phi` instruction now accepts `Vec(String, Value)` to support multiple arguments ([#48](https://github.com/garritfra/qbe-rs/pull/48))
 - BREAKING: Support for opaque and union types ([#39](https://github.com/garritfra/qbe-rs/pull/39))
 
 ### Internal
@@ -14,7 +19,26 @@ All notable changes to this project will be documented in this file.
 
 ### Migrating from v2.x to v3.0.0
 
-Version v3.0.0 introduces a breaking change when it comes to how aggregate types are defined.
+This version introduces potentially breaking changes.
+
+#### `Phi` instruction
+
+The `Phi` instruction now accepts a `Vec<(String, Value)>` instead of two fixed label-value pairs, allowing for any number of arguments:
+
+```rust
+// Before
+Instr::Phi("ift".into(), Value::Const(2), "iff".into(), Value::Temporary("3".into()))
+
+// After
+Instr::Phi(vec![
+    ("ift".into(), Value::Const(2)),
+    ("iff".into(), Value::Temporary("3".into())),
+])
+```
+
+#### Aggregate types
+
+[Aggregate types](https://c9x.me/compile/doc/il.html#Aggregate-Types) now use a new `TypeDef::Regular` enum variant instead of the old `TypeDef` struct to allow for support of opaque and union types:
 
 ```rust
 let my_aggregate_type = TypeDef {
