@@ -12,6 +12,25 @@ All notable changes to this project will be documented in this file.
 
 - Update Rust toolchain to 1.89 ([#44](https://github.com/garritfra/qbe-rs/pull/44))
 
+### Migrating from v2.x to v3.0.0
+
+Version v3.0.0 introduces a breaking change when it comes to how aggregate types are defined.
+
+```rust
+let my_aggregate_type = TypeDef {
+    name: "SomeType".into(),
+    align: None,
+    items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)]   
+};
+
+// Becomes
+let my_aggregate_type = TypeDef::Regular {
+    ident: "SomeType".into(),
+    align: None,
+    items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)]   
+};
+```
+
 ## [2.5.1] - 2025-08-08
 
 ### Added
