@@ -27,10 +27,6 @@ Instr::Load(Type::SignedHalfword, src)    // emits loadsh
 Instr::Load(Type::UnsignedHalfword, src)  // emits loaduh
 ```
 
-#### Sub-word stores (non-breaking)
-
-`Store` with `Type::SignedByte`, `Type::UnsignedByte`, `Type::SignedHalfword`, or `Type::UnsignedHalfword` previously emitted invalid instructions (`storesb`, `storeub`, etc.). These now correctly emit `storeb`/`storeh`. No code changes needed — existing code using these types will silently produce correct output.
-
 ## [3.0.0] - 2026-02-19
 
 ### Added
