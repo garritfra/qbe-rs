@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- BREAKING: `Load` with `Type::Byte` or `Type::Halfword` now panics instead of emitting invalid `loadb`/`loadh` instructions. Use `SignedByte`/`UnsignedByte` or `SignedHalfword`/`UnsignedHalfword` instead. ([#51](https://github.com/garritfra/qbe-rs/issues/51))
-- `Store` with signed/unsigned sub-word types (`SignedByte`, `UnsignedByte`, `SignedHalfword`, `UnsignedHalfword`) now correctly emits `storeb`/`storeh` instead of invalid `storesb`/`storeub`/`storesh`/`storeuh`
+- BREAKING: `Load` with `Type::Byte` or `Type::Halfword` now panics instead of emitting invalid `loadb`/`loadh` instructions. Use `SignedByte`/`UnsignedByte` or `SignedHalfword`/`UnsignedHalfword` instead. ([#51](https://github.com/garritfra/qbe-rs/issues/51), [#54](https://github.com/garritfra/qbe-rs/pull/54))
+- `Store` with signed/unsigned sub-word types (`SignedByte`, `UnsignedByte`, `SignedHalfword`, `UnsignedHalfword`) now correctly emits `storeb`/`storeh` instead of invalid `storesb`/`storeub`/`storesh`/`storeuh` ([#54](https://github.com/garritfra/qbe-rs/pull/54))
 
 ### Migration guide
 
