@@ -6,8 +6,7 @@ authors = ["Garrit Franke <garrit@slashdev.space>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/garritfra/qbe-rs"
 keywords = ["qbe", "compiler", "ir"]
+categories = ["compilers"]
 description = "QBE IR for Rust"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
