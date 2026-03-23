@@ -474,6 +474,24 @@ impl fmt::Display for Instr {
 /// assert_eq!(byte.size(), 1);
 /// ```
 ///
+/// ## Aggregate Types
+///
+/// Aggregate types reference a [`TypeDef`] via [`Rc`](std::rc::Rc):
+///
+/// ```rust
+/// use std::rc::Rc;
+/// use qbe::{TypeDef, Type};
+///
+/// let td = Rc::new(TypeDef::Regular {
+///     ident: "pair".into(),
+///     align: None,
+///     items: vec![(Type::Word, 2)],
+/// });
+///
+/// let ty = Type::aggregate(&td);
+/// assert_eq!(ty.size(), 8);
+/// ```
+///
 /// ## Type Conversions
 ///
 /// ```rust
@@ -506,7 +524,10 @@ pub enum Type {
     SignedHalfword,
     UnsignedHalfword,
 
-    /// Aggregate type with a specified name
+    /// Aggregate type referencing a [`TypeDef`].
+    ///
+    /// Use [`Type::aggregate`] to construct, or wrap a [`TypeDef`] in
+    /// [`Rc::new`](std::rc::Rc::new) and pass it directly.
     Aggregate(Rc<TypeDef>),
 }
 
