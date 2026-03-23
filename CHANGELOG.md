@@ -13,6 +13,13 @@ All notable changes to this project will be documented in this file.
 
 - `Type::aggregate(&Arc<TypeDef>)` convenience constructor
 - `From<Arc<TypeDef>>` and `From<TypeDef>` implementations for `Type`
+- `From<u64>` implementation for `Value`, allowing `Value::from(42)` or `42.into()` as shorthand for `Value::Const(42)`
+- `categories` field in Cargo.toml metadata
+
+### Improved
+
+- Panic messages in `Display` impls now include descriptive context (e.g. `"cannot store to an aggregate type"` instead of `unimplemented!()`)
+- `Function::add_instr` and `Function::assign_instr` document their panic conditions
 
 ### Fixed
 

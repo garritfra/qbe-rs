@@ -337,7 +337,7 @@ impl fmt::Display for Instr {
             Self::Cmp(ty, cmp, lhs, rhs) => {
                 assert!(
                     !matches!(ty, Type::Aggregate(_)),
-                    "Cannot compare aggregate types"
+                    "cannot compare aggregate types"
                 );
 
                 write!(
@@ -398,7 +398,7 @@ impl fmt::Display for Instr {
                 let suffix = match ty {
                     Type::SignedByte | Type::UnsignedByte => "b".to_string(),
                     Type::SignedHalfword | Type::UnsignedHalfword => "h".to_string(),
-                    Type::Aggregate(_) => unimplemented!("Store to an aggregate type"),
+                    Type::Aggregate(_) => panic!("cannot store to an aggregate type"),
                     _ => ty.to_string(),
                 };
                 write!(f, "store{suffix} {value}, {dest}")
@@ -407,7 +407,7 @@ impl fmt::Display for Instr {
                 Type::Byte | Type::Halfword => panic!(
                     "ambiguous sub-word load: use SignedByte/UnsignedByte or SignedHalfword/UnsignedHalfword"
                 ),
-                Type::Aggregate(_) => unimplemented!("Load aggregate type"),
+                Type::Aggregate(_) => panic!("cannot load aggregate type"),
                 _ => write!(f, "load{ty} {src}"),
             }
             Self::Blit(src, dst, n) => write!(f, "blit {src}, {dst}, {n}"),
@@ -701,6 +701,12 @@ pub enum Value {
     Const(u64),
 }
 
+impl From<u64> for Value {
+    fn from(val: u64) -> Self {
+        Value::Const(val)
+    }
+}
+
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -869,7 +875,10 @@ impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Assign(temp, ty, instr) => {
-                assert!(matches!(temp, Value::Temporary(_)));
+                assert!(
+                    matches!(temp, Value::Temporary(_)),
+                    "assignment target must be a temporary, got {temp:?}"
+                );
                 write!(f, "{temp} ={ty} {instr}")
             }
             Self::Volatile(instr) => write!(f, "{instr}"),
@@ -1100,7 +1109,11 @@ impl Function {
             .expect("Function must have at least one block")
     }
 
-    /// Adds a new instruction to the last block
+    /// Adds a new instruction to the last block.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the function has no blocks.
     pub fn add_instr(&mut self, instr: Instr) {
         self.blocks
             .last_mut()
@@ -1108,7 +1121,11 @@ impl Function {
             .add_instr(instr);
     }
 
-    /// Adds a new instruction assigned to a temporary
+    /// Adds a new instruction assigned to a temporary.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the function has no blocks.
     pub fn assign_instr(&mut self, temp: Value, ty: Type, instr: Instr) {
         self.blocks
             .last_mut()
