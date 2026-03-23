@@ -8,6 +8,7 @@
 // except according to those terms.
 
 use crate::*;
+use std::rc::Rc;
 
 #[test]
 fn qbe_value() {
@@ -162,7 +163,7 @@ fn typedef_regular() {
     let formatted = format!("{typedef_with_align}");
     assert_eq!(formatted, "type :person = align 8 { l, w 2, b }");
 
-    let ty = Type::Aggregate(&typedef);
+    let ty = Type::aggregate(&Rc::new(typedef));
     let formatted = format!("{ty}");
     assert_eq!(formatted, ":person");
 }
@@ -193,7 +194,7 @@ fn typedef_union() {
     let formatted = format!("{typedef_with_align}");
     assert_eq!(formatted, "type :data = align 8 { { l, w 2, b } { l 2 } }");
 
-    let ty = Type::Aggregate(&typedef);
+    let ty = Type::aggregate(&Rc::new(typedef));
     let formatted = format!("{ty}");
     assert_eq!(formatted, ":data");
 }
@@ -209,7 +210,7 @@ fn typedef_opaque() {
     let formatted = format!("{typedef}");
     assert_eq!(formatted, "type :data = align 8 { 64 }");
 
-    let ty = Type::Aggregate(&typedef);
+    let ty = Type::aggregate(&Rc::new(typedef));
     let formatted = format!("{ty}");
     assert_eq!(formatted, ":data");
 }
@@ -232,26 +233,26 @@ fn type_size() {
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
-    let aggregate = Type::Aggregate(&typedef_regular);
+    let aggregate = Type::aggregate(&Rc::new(typedef_regular));
     assert_eq!(aggregate.size(), 24);
 
-    let typedef_union = TypeDef::Union {
+    let typedef_union = Rc::new(TypeDef::Union {
         ident: "data".into(),
         align: None,
         variations: vec![
             vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
             vec![(Type::Long, 5)],
         ],
-    };
-    let aggregate = Type::Aggregate(&typedef_union);
+    });
+    let aggregate = Type::aggregate(&typedef_union);
     assert_eq!(aggregate.size(), 40);
 
-    let typedef_opaque = TypeDef::Opaque {
+    let typedef_opaque = Rc::new(TypeDef::Opaque {
         ident: "data".into(),
         align: 8,
         size: 64,
-    };
-    let aggregate = Type::Aggregate(&typedef_opaque);
+    });
+    let aggregate = Type::aggregate(&typedef_opaque);
     assert_eq!(aggregate.size(), 64);
 }
 
@@ -273,51 +274,51 @@ fn type_align() {
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
-    let aggregate = Type::Aggregate(&typedef_regular);
+    let aggregate = Type::aggregate(&Rc::new(typedef_regular));
     assert_eq!(aggregate.align(), 8);
 
-    let typedef_union = TypeDef::Union {
+    let typedef_union = Rc::new(TypeDef::Union {
         ident: "data".into(),
         align: None,
         variations: vec![
             vec![(Type::Word, 1), (Type::Word, 2), (Type::Byte, 1)],
             vec![(Type::Long, 5)],
         ],
-    };
-    let aggregate = Type::Aggregate(&typedef_union);
+    });
+    let aggregate = Type::aggregate(&typedef_union);
     assert_eq!(aggregate.align(), 8);
 
-    let typedef_opaque = TypeDef::Opaque {
+    let typedef_opaque = Rc::new(TypeDef::Opaque {
         ident: "data".into(),
         align: 8,
         size: 64,
-    };
-    let aggregate = Type::Aggregate(&typedef_opaque);
+    });
+    let aggregate = Type::aggregate(&typedef_opaque);
     assert_eq!(aggregate.align(), 8);
 }
 
 #[test]
 fn type_size_nested_aggregate() {
-    let inner = TypeDef::Regular {
+    let inner = Rc::new(TypeDef::Regular {
         ident: "dog".into(),
         align: None,
         items: vec![(Type::Long, 2)],
-    };
-    let inner_aggregate = Type::Aggregate(&inner);
+    });
+    let inner_aggregate = Type::aggregate(&inner);
 
     assert!(inner_aggregate.size() == 16);
 
-    let typedef = TypeDef::Regular {
+    let typedef = Rc::new(TypeDef::Regular {
         ident: "person".into(),
         align: None,
         items: vec![
             (Type::Long, 1),
             (Type::Word, 2),
             (Type::Byte, 1),
-            (Type::Aggregate(&inner), 1),
+            (Type::aggregate(&inner), 1),
         ],
-    };
-    let aggregate = Type::Aggregate(&typedef);
+    });
+    let aggregate = Type::aggregate(&typedef);
 
     assert_eq!(aggregate.size(), 40);
 }
@@ -330,12 +331,12 @@ fn type_into_abi() {
     unchanged(Type::Long);
     unchanged(Type::Single);
     unchanged(Type::Double);
-    let typedef = TypeDef::Regular {
+    let typedef = Rc::new(TypeDef::Regular {
         ident: "foo".into(),
         align: None,
         items: Vec::new(),
-    };
-    unchanged(Type::Aggregate(&typedef));
+    });
+    unchanged(Type::aggregate(&typedef));
 
     // Extended types are transformed into closest base types
     assert_eq!(Type::Byte.into_abi(), Type::Word);
@@ -362,12 +363,12 @@ fn type_into_base() {
     assert_eq!(Type::Halfword.into_base(), Type::Word);
     assert_eq!(Type::UnsignedHalfword.into_base(), Type::Word);
     assert_eq!(Type::SignedHalfword.into_base(), Type::Word);
-    let typedef = TypeDef::Regular {
+    let typedef = Rc::new(TypeDef::Regular {
         ident: "foo".into(),
         align: None,
         items: Vec::new(),
-    };
-    assert_eq!(Type::Aggregate(&typedef).into_base(), Type::Long);
+    });
+    assert_eq!(Type::aggregate(&typedef).into_base(), Type::Long);
 }
 
 #[test]
@@ -407,11 +408,11 @@ fn module_fmt_order() {
     let mut module = Module::new();
 
     // Add a type definition to the module
-    let typedef = TypeDef::Regular {
+    let typedef = Rc::new(TypeDef::Regular {
         ident: "test_type".into(),
         align: None,
         items: vec![(Type::Long, 1)],
-    };
+    });
     module.add_type(typedef);
 
     // Add a function to the module
@@ -866,21 +867,21 @@ fn assign_instr_aggregate_type_coercion() {
         items: Vec::new(),
     };
 
-    let typedef = TypeDef::Regular {
+    let typedef = Rc::new(TypeDef::Regular {
         ident: "person".into(),
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
-    };
+    });
 
     block.assign_instr(
         Value::Temporary("human".into()),
-        Type::Aggregate(&typedef),
-        Instr::Alloc8(Type::Aggregate(&typedef).size()),
+        Type::aggregate(&typedef),
+        Instr::Alloc8(Type::aggregate(&typedef).size()),
     );
 
     block.assign_instr(
         Value::Temporary("result".into()),
-        Type::Aggregate(&typedef),
+        Type::aggregate(&typedef),
         Instr::Call("new_person".into(), vec![], None),
     );
 
