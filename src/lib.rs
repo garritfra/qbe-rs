@@ -379,18 +379,20 @@ impl fmt::Display for Instr<'_> {
             Self::Alloc8(size) => write!(f, "alloc8 {size}"),
             Self::Alloc16(size) => write!(f, "alloc16 {size}"),
             Self::Store(ty, dest, value) => {
-                if matches!(ty, Type::Aggregate(_)) {
-                    unimplemented!("Store to an aggregate type");
-                }
-
-                write!(f, "store{ty} {value}, {dest}")
+                let suffix = match ty {
+                    Type::SignedByte | Type::UnsignedByte => "b".to_string(),
+                    Type::SignedHalfword | Type::UnsignedHalfword => "h".to_string(),
+                    Type::Aggregate(_) => unimplemented!("Store to an aggregate type"),
+                    _ => ty.to_string(),
+                };
+                write!(f, "store{suffix} {value}, {dest}")
             }
-            Self::Load(ty, src) => {
-                if matches!(ty, Type::Aggregate(_)) {
-                    unimplemented!("Load aggregate type");
-                }
-
-                write!(f, "load{ty} {src}")
+            Self::Load(ty, src) => match ty {
+                Type::Byte | Type::Halfword => panic!(
+                    "ambiguous sub-word load: use SignedByte/UnsignedByte or SignedHalfword/UnsignedHalfword"
+                ),
+                Type::Aggregate(_) => unimplemented!("Load aggregate type"),
+                _ => write!(f, "load{ty} {src}"),
             }
             Self::Blit(src, dst, n) => write!(f, "blit {src}, {dst}, {n}"),
             Self::Udiv(lhs, rhs) => write!(f, "udiv {lhs}, {rhs}"),
