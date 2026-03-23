@@ -995,17 +995,11 @@ fn store_valid_types() {
         "storel %val, %addr"
     );
     assert_eq!(
-        format!(
-            "{}",
-            Instr::Store(Type::Single, dest.clone(), val.clone())
-        ),
+        format!("{}", Instr::Store(Type::Single, dest.clone(), val.clone())),
         "stores %val, %addr"
     );
     assert_eq!(
-        format!(
-            "{}",
-            Instr::Store(Type::Double, dest.clone(), val.clone())
-        ),
+        format!("{}", Instr::Store(Type::Double, dest.clone(), val.clone())),
         "stored %val, %addr"
     );
 }
