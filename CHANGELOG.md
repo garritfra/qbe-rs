@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- BREAKING: `Type::Aggregate` now holds `Rc<TypeDef>` instead of `&'a TypeDef<'a>`, removing the lifetime parameter from all public types ([#50](https://github.com/garritfra/qbe-rs/issues/50))
+- BREAKING: `Module::types` is now `Vec<Rc<TypeDef>>` and `Module::add_type()` accepts `Rc<TypeDef>`
+
+### Added
+
+- `Type::aggregate(&Rc<TypeDef>)` convenience constructor
+
 ### Fixed
 
 - BREAKING: `Load` with `Type::Byte` or `Type::Halfword` now panics instead of emitting invalid `loadb`/`loadh` instructions. Use `SignedByte`/`UnsignedByte` or `SignedHalfword`/`UnsignedHalfword` instead. ([#51](https://github.com/garritfra/qbe-rs/issues/51), [#54](https://github.com/garritfra/qbe-rs/pull/54))
@@ -25,6 +34,56 @@ Instr::Load(Type::SignedByte, src)    // emits loadsb
 Instr::Load(Type::UnsignedByte, src)  // emits loadub
 Instr::Load(Type::SignedHalfword, src)    // emits loadsh
 Instr::Load(Type::UnsignedHalfword, src)  // emits loaduh
+```
+
+#### Aggregate types and lifetime removal
+
+`Type::Aggregate` now holds `Rc<TypeDef>` instead of a borrowed reference, and all lifetime parameters have been removed from the public API. Wrap your `TypeDef` in `Rc::new()` and use the `Type::aggregate()` constructor:
+
+```rust
+use std::rc::Rc;
+
+// Before
+let typedef = TypeDef::Regular {
+    ident: "person".into(),
+    align: None,
+    items: vec![(Type::Long, 1), (Type::Word, 2)],
+};
+let ty = Type::Aggregate(&typedef);
+
+// After
+let typedef = Rc::new(TypeDef::Regular {
+    ident: "person".into(),
+    align: None,
+    items: vec![(Type::Long, 1), (Type::Word, 2)],
+});
+let ty = Type::aggregate(&typedef);
+```
+
+`Module::add_type()` now accepts `Rc<TypeDef>`:
+
+```rust
+// Before
+module.add_type(typedef);
+
+// After
+module.add_type(Rc::new(typedef));
+```
+
+All lifetime annotations on qbe types can be removed:
+
+```rust
+// Before
+struct MyGenerator<'a> {
+    module: qbe::Module<'a>,
+    func: qbe::Function<'a>,
+}
+
+// After
+struct MyGenerator {
+    module: qbe::Module,
+    func: qbe::Function,
+}
 ```
 
 ## [3.0.0] - 2026-02-19
