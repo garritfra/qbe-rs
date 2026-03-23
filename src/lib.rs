@@ -600,7 +600,7 @@ impl Type {
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
             Self::Aggregate(td) => {
-                fn size_of_items(s: &Type, items: &Vec<(Type, usize)>) -> u64 {
+                fn size_of_items(s: &Type, items: &[(Type, usize)]) -> u64 {
                     let mut offset = 0;
 
                     // calculation taken from: https://en.wikipedia.org/wiki/Data_structure_alignment#Computing%20padding
@@ -635,7 +635,7 @@ impl Type {
     pub fn align(&self) -> u64 {
         match self {
             Self::Aggregate(td) => {
-                fn align_of_items(items: &Vec<(Type, usize)>) -> u64 {
+                fn align_of_items(items: &[(Type, usize)]) -> u64 {
                     // the alignment of a type is the maximum alignment of its members
                     // when there's no members, the alignment is usuallly defined to be 1.
                     items.iter().map(|item| item.0.align()).max().unwrap_or(1)
@@ -660,7 +660,7 @@ impl Type {
 
                         // the alignment of a union is the maximum alignment of its variations
                         // when there's no variations, the alignment is usuallly defined to be 1.
-                        items.iter().map(align_of_items).max().unwrap_or(1)
+                        items.iter().map(|v| align_of_items(v)).max().unwrap_or(1)
                     }
                     TypeDef::Opaque { align, .. } => *align,
                 }
@@ -826,7 +826,7 @@ impl fmt::Display for TypeDef {
             write!(f, "align {align} ")?;
         }
 
-        fn format(items: &Vec<(Type, usize)>) -> String {
+        fn format(items: &[(Type, usize)]) -> String {
             items
                 .iter()
                 .map(|(ty, count)| {
