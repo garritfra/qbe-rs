@@ -891,3 +891,121 @@ fn assign_instr_aggregate_type_coercion() {
     assert_eq!(lines[1], "\t%human =l alloc8 24");
     assert_eq!(lines[2], "\t%result =:person call $new_person()");
 }
+
+#[test]
+fn load_valid_types() {
+    let src = Value::Temporary("addr".into());
+    assert_eq!(
+        format!("{}", Instr::Load(Type::SignedByte, src.clone())),
+        "loadsb %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Load(Type::UnsignedByte, src.clone())),
+        "loadub %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Load(Type::SignedHalfword, src.clone())),
+        "loadsh %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Load(Type::UnsignedHalfword, src.clone())),
+        "loaduh %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Load(Type::Word, src.clone())),
+        "loadw %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Load(Type::Long, src.clone())),
+        "loadl %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Load(Type::Single, src.clone())),
+        "loads %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Load(Type::Double, src.clone())),
+        "loadd %addr"
+    );
+}
+
+#[test]
+#[should_panic(expected = "ambiguous sub-word load")]
+fn load_byte_panics() {
+    let src = Value::Temporary("addr".into());
+    let _ = format!("{}", Instr::Load(Type::Byte, src));
+}
+
+#[test]
+#[should_panic(expected = "ambiguous sub-word load")]
+fn load_halfword_panics() {
+    let src = Value::Temporary("addr".into());
+    let _ = format!("{}", Instr::Load(Type::Halfword, src));
+}
+
+#[test]
+fn store_valid_types() {
+    let dest = Value::Temporary("addr".into());
+    let val = Value::Temporary("val".into());
+    assert_eq!(
+        format!("{}", Instr::Store(Type::Byte, dest.clone(), val.clone())),
+        "storeb %val, %addr"
+    );
+    assert_eq!(
+        format!(
+            "{}",
+            Instr::Store(Type::SignedByte, dest.clone(), val.clone())
+        ),
+        "storeb %val, %addr"
+    );
+    assert_eq!(
+        format!(
+            "{}",
+            Instr::Store(Type::UnsignedByte, dest.clone(), val.clone())
+        ),
+        "storeb %val, %addr"
+    );
+    assert_eq!(
+        format!(
+            "{}",
+            Instr::Store(Type::Halfword, dest.clone(), val.clone())
+        ),
+        "storeh %val, %addr"
+    );
+    assert_eq!(
+        format!(
+            "{}",
+            Instr::Store(Type::SignedHalfword, dest.clone(), val.clone())
+        ),
+        "storeh %val, %addr"
+    );
+    assert_eq!(
+        format!(
+            "{}",
+            Instr::Store(Type::UnsignedHalfword, dest.clone(), val.clone())
+        ),
+        "storeh %val, %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Store(Type::Word, dest.clone(), val.clone())),
+        "storew %val, %addr"
+    );
+    assert_eq!(
+        format!("{}", Instr::Store(Type::Long, dest.clone(), val.clone())),
+        "storel %val, %addr"
+    );
+    assert_eq!(
+        format!(
+            "{}",
+            Instr::Store(Type::Single, dest.clone(), val.clone())
+        ),
+        "stores %val, %addr"
+    );
+    assert_eq!(
+        format!(
+            "{}",
+            Instr::Store(Type::Double, dest.clone(), val.clone())
+        ),
+        "stored %val, %addr"
+    );
+}

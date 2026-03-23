@@ -4,7 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-xxx
+### Fixed
+
+- BREAKING: `Load` with `Type::Byte` or `Type::Halfword` now panics instead of emitting invalid `loadb`/`loadh` instructions. Use `SignedByte`/`UnsignedByte` or `SignedHalfword`/`UnsignedHalfword` instead. ([#51](https://github.com/garritfra/qbe-rs/issues/51))
+- `Store` with signed/unsigned sub-word types (`SignedByte`, `UnsignedByte`, `SignedHalfword`, `UnsignedHalfword`) now correctly emits `storeb`/`storeh` instead of invalid `storesb`/`storeub`/`storesh`/`storeuh`
+
+### Migration guide
+
+#### Sub-word loads
+
+`Load` with `Type::Byte` or `Type::Halfword` previously emitted invalid QBE IL (`loadb`/`loadh`). These now panic at runtime. Replace with the explicit signed/unsigned variant:
+
+```rust
+// Before (produced invalid QBE IL)
+Instr::Load(Type::Byte, src)
+Instr::Load(Type::Halfword, src)
+
+// After — choose signed or unsigned extension
+Instr::Load(Type::SignedByte, src)    // emits loadsb
+Instr::Load(Type::UnsignedByte, src)  // emits loadub
+Instr::Load(Type::SignedHalfword, src)    // emits loadsh
+Instr::Load(Type::UnsignedHalfword, src)  // emits loaduh
+```
+
+#### Sub-word stores (non-breaking)
+
+`Store` with `Type::SignedByte`, `Type::UnsignedByte`, `Type::SignedHalfword`, or `Type::UnsignedHalfword` previously emitted invalid instructions (`storesb`, `storeub`, etc.). These now correctly emit `storeb`/`storeh`. No code changes needed — existing code using these types will silently produce correct output.
 
 ## [3.0.0] - 2026-02-19
 
