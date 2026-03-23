@@ -224,6 +224,8 @@ pub enum Instr<'a> {
     /// For sub-word types, signed/unsigned variants (`SignedByte`, `UnsignedByte`,
     /// `SignedHalfword`, `UnsignedHalfword`) are accepted and map to `storeb`/`storeh`,
     /// since stores only truncate and don't distinguish signedness.
+    ///
+    /// See the [QBE IL reference](https://c9x.me/compile/doc/il.html#Memory).
     Store(Type<'a>, Value, Value),
     /// Loads a value from memory pointed to by source.
     /// `(type, source)`
@@ -234,6 +236,8 @@ pub enum Instr<'a> {
     /// explicit sign/zero extension for sub-word loads. Use [`Type::SignedByte`] /
     /// [`Type::UnsignedByte`] or [`Type::SignedHalfword`] / [`Type::UnsignedHalfword`]
     /// instead.
+    ///
+    /// See the [QBE IL reference](https://c9x.me/compile/doc/il.html#Memory).
     Load(Type<'a>, Value),
     /// `(source, destination, n)`
     ///
