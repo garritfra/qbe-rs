@@ -220,9 +220,20 @@ pub enum Instr<'a> {
     Alloc16(u128),
     /// Stores a value into memory pointed to by destination.
     /// `(type, destination, value)`
+    ///
+    /// For sub-word types, signed/unsigned variants (`SignedByte`, `UnsignedByte`,
+    /// `SignedHalfword`, `UnsignedHalfword`) are accepted and map to `storeb`/`storeh`,
+    /// since stores only truncate and don't distinguish signedness.
     Store(Type<'a>, Value, Value),
-    /// Loads a value from memory pointed to by source
+    /// Loads a value from memory pointed to by source.
     /// `(type, source)`
+    ///
+    /// # Panics
+    ///
+    /// Panics if called with [`Type::Byte`] or [`Type::Halfword`], because QBE requires
+    /// explicit sign/zero extension for sub-word loads. Use [`Type::SignedByte`] /
+    /// [`Type::UnsignedByte`] or [`Type::SignedHalfword`] / [`Type::UnsignedHalfword`]
+    /// instead.
     Load(Type<'a>, Value),
     /// `(source, destination, n)`
     ///
