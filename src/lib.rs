@@ -67,7 +67,7 @@
 //! ```
 
 use std::fmt;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[cfg(test)]
 mod tests;
@@ -476,13 +476,13 @@ impl fmt::Display for Instr {
 ///
 /// ## Aggregate Types
 ///
-/// Aggregate types reference a [`TypeDef`] via [`Rc`](std::rc::Rc):
+/// Aggregate types reference a [`TypeDef`] via [`Arc`](std::sync::Arc):
 ///
 /// ```rust
-/// use std::rc::Rc;
+/// use std::sync::Arc;
 /// use qbe::{TypeDef, Type};
 ///
-/// let td = Rc::new(TypeDef::Regular {
+/// let td = Arc::new(TypeDef::Regular {
 ///     ident: "pair".into(),
 ///     align: None,
 ///     items: vec![(Type::Word, 2)],
@@ -527,8 +527,20 @@ pub enum Type {
     /// Aggregate type referencing a [`TypeDef`].
     ///
     /// Use [`Type::aggregate`] to construct, or wrap a [`TypeDef`] in
-    /// [`Rc::new`](std::rc::Rc::new) and pass it directly.
-    Aggregate(Rc<TypeDef>),
+    /// [`Arc::new`](std::sync::Arc::new) and pass it directly.
+    Aggregate(Arc<TypeDef>),
+}
+
+impl From<Arc<TypeDef>> for Type {
+    fn from(td: Arc<TypeDef>) -> Self {
+        Type::Aggregate(td)
+    }
+}
+
+impl From<TypeDef> for Type {
+    fn from(td: TypeDef) -> Self {
+        Type::Aggregate(Arc::new(td))
+    }
 }
 
 impl Type {
@@ -537,10 +549,10 @@ impl Type {
     /// # Examples
     ///
     /// ```rust
-    /// use std::rc::Rc;
+    /// use std::sync::Arc;
     /// use qbe::{TypeDef, Type};
     ///
-    /// let td = Rc::new(TypeDef::Regular {
+    /// let td = Arc::new(TypeDef::Regular {
     ///     ident: "person".into(),
     ///     align: None,
     ///     items: vec![(Type::Long, 1)],
@@ -548,8 +560,8 @@ impl Type {
     /// let ty = Type::aggregate(&td);
     /// assert_eq!(format!("{ty}"), ":person");
     /// ```
-    pub fn aggregate(td: &Rc<TypeDef>) -> Self {
-        Type::Aggregate(Rc::clone(td))
+    pub fn aggregate(td: &Arc<TypeDef>) -> Self {
+        Type::Aggregate(Arc::clone(td))
     }
 
     /// Returns a C ABI type. Extended types are converted to closest base
@@ -1295,7 +1307,7 @@ impl fmt::Display for Linkage {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Module {
     pub functions: Vec<Function>,
-    pub types: Vec<Rc<TypeDef>>,
+    pub types: Vec<Arc<TypeDef>>,
     pub data: Vec<DataDef>,
 }
 
@@ -1317,7 +1329,7 @@ impl Module {
     }
 
     /// Adds a type definition to the module
-    pub fn add_type(&mut self, def: Rc<TypeDef>) {
+    pub fn add_type(&mut self, def: Arc<TypeDef>) {
         self.types.push(def);
     }
 

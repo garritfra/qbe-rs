@@ -8,7 +8,7 @@
 // except according to those terms.
 
 use crate::*;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[test]
 fn qbe_value() {
@@ -163,7 +163,7 @@ fn typedef_regular() {
     let formatted = format!("{typedef_with_align}");
     assert_eq!(formatted, "type :person = align 8 { l, w 2, b }");
 
-    let ty = Type::aggregate(&Rc::new(typedef));
+    let ty = Type::aggregate(&Arc::new(typedef));
     let formatted = format!("{ty}");
     assert_eq!(formatted, ":person");
 }
@@ -194,7 +194,7 @@ fn typedef_union() {
     let formatted = format!("{typedef_with_align}");
     assert_eq!(formatted, "type :data = align 8 { { l, w 2, b } { l 2 } }");
 
-    let ty = Type::aggregate(&Rc::new(typedef));
+    let ty = Type::aggregate(&Arc::new(typedef));
     let formatted = format!("{ty}");
     assert_eq!(formatted, ":data");
 }
@@ -210,7 +210,7 @@ fn typedef_opaque() {
     let formatted = format!("{typedef}");
     assert_eq!(formatted, "type :data = align 8 { 64 }");
 
-    let ty = Type::aggregate(&Rc::new(typedef));
+    let ty = Type::aggregate(&Arc::new(typedef));
     let formatted = format!("{ty}");
     assert_eq!(formatted, ":data");
 }
@@ -233,10 +233,10 @@ fn type_size() {
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
-    let aggregate = Type::aggregate(&Rc::new(typedef_regular));
+    let aggregate = Type::aggregate(&Arc::new(typedef_regular));
     assert_eq!(aggregate.size(), 24);
 
-    let typedef_union = Rc::new(TypeDef::Union {
+    let typedef_union = Arc::new(TypeDef::Union {
         ident: "data".into(),
         align: None,
         variations: vec![
@@ -247,7 +247,7 @@ fn type_size() {
     let aggregate = Type::aggregate(&typedef_union);
     assert_eq!(aggregate.size(), 40);
 
-    let typedef_opaque = Rc::new(TypeDef::Opaque {
+    let typedef_opaque = Arc::new(TypeDef::Opaque {
         ident: "data".into(),
         align: 8,
         size: 64,
@@ -274,10 +274,10 @@ fn type_align() {
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],
     };
-    let aggregate = Type::aggregate(&Rc::new(typedef_regular));
+    let aggregate = Type::aggregate(&Arc::new(typedef_regular));
     assert_eq!(aggregate.align(), 8);
 
-    let typedef_union = Rc::new(TypeDef::Union {
+    let typedef_union = Arc::new(TypeDef::Union {
         ident: "data".into(),
         align: None,
         variations: vec![
@@ -288,7 +288,7 @@ fn type_align() {
     let aggregate = Type::aggregate(&typedef_union);
     assert_eq!(aggregate.align(), 8);
 
-    let typedef_opaque = Rc::new(TypeDef::Opaque {
+    let typedef_opaque = Arc::new(TypeDef::Opaque {
         ident: "data".into(),
         align: 8,
         size: 64,
@@ -299,7 +299,7 @@ fn type_align() {
 
 #[test]
 fn type_size_nested_aggregate() {
-    let inner = Rc::new(TypeDef::Regular {
+    let inner = Arc::new(TypeDef::Regular {
         ident: "dog".into(),
         align: None,
         items: vec![(Type::Long, 2)],
@@ -308,7 +308,7 @@ fn type_size_nested_aggregate() {
 
     assert!(inner_aggregate.size() == 16);
 
-    let typedef = Rc::new(TypeDef::Regular {
+    let typedef = Arc::new(TypeDef::Regular {
         ident: "person".into(),
         align: None,
         items: vec![
@@ -331,7 +331,7 @@ fn type_into_abi() {
     unchanged(Type::Long);
     unchanged(Type::Single);
     unchanged(Type::Double);
-    let typedef = Rc::new(TypeDef::Regular {
+    let typedef = Arc::new(TypeDef::Regular {
         ident: "foo".into(),
         align: None,
         items: Vec::new(),
@@ -363,7 +363,7 @@ fn type_into_base() {
     assert_eq!(Type::Halfword.into_base(), Type::Word);
     assert_eq!(Type::UnsignedHalfword.into_base(), Type::Word);
     assert_eq!(Type::SignedHalfword.into_base(), Type::Word);
-    let typedef = Rc::new(TypeDef::Regular {
+    let typedef = Arc::new(TypeDef::Regular {
         ident: "foo".into(),
         align: None,
         items: Vec::new(),
@@ -408,7 +408,7 @@ fn module_fmt_order() {
     let mut module = Module::new();
 
     // Add a type definition to the module
-    let typedef = Rc::new(TypeDef::Regular {
+    let typedef = Arc::new(TypeDef::Regular {
         ident: "test_type".into(),
         align: None,
         items: vec![(Type::Long, 1)],
@@ -867,7 +867,7 @@ fn assign_instr_aggregate_type_coercion() {
         items: Vec::new(),
     };
 
-    let typedef = Rc::new(TypeDef::Regular {
+    let typedef = Arc::new(TypeDef::Regular {
         ident: "person".into(),
         align: None,
         items: vec![(Type::Long, 1), (Type::Word, 2), (Type::Byte, 1)],

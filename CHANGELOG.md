@@ -6,12 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- BREAKING: `Type::Aggregate` now holds `Rc<TypeDef>` instead of `&'a TypeDef<'a>`, removing the lifetime parameter from all public types ([#50](https://github.com/garritfra/qbe-rs/issues/50))
-- BREAKING: `Module::types` is now `Vec<Rc<TypeDef>>` and `Module::add_type()` accepts `Rc<TypeDef>`
+- BREAKING: `Type::Aggregate` now holds `Arc<TypeDef>` instead of `&'a TypeDef<'a>`, removing the lifetime parameter from all public types ([#50](https://github.com/garritfra/qbe-rs/issues/50))
+- BREAKING: `Module::types` is now `Vec<Arc<TypeDef>>` and `Module::add_type()` accepts `Arc<TypeDef>`
 
 ### Added
 
-- `Type::aggregate(&Rc<TypeDef>)` convenience constructor
+- `Type::aggregate(&Arc<TypeDef>)` convenience constructor
+- `From<Arc<TypeDef>>` and `From<TypeDef>` implementations for `Type`
 
 ### Fixed
 
@@ -38,10 +39,10 @@ Instr::Load(Type::UnsignedHalfword, src)  // emits loaduh
 
 #### Aggregate types and lifetime removal
 
-`Type::Aggregate` now holds `Rc<TypeDef>` instead of a borrowed reference, and all lifetime parameters have been removed from the public API. Wrap your `TypeDef` in `Rc::new()` and use the `Type::aggregate()` constructor:
+`Type::Aggregate` now holds `Arc<TypeDef>` instead of a borrowed reference, and all lifetime parameters have been removed from the public API. Wrap your `TypeDef` in `Arc::new()` and use the `Type::aggregate()` constructor:
 
 ```rust
-use std::rc::Rc;
+use std::sync::Arc;
 
 // Before
 let typedef = TypeDef::Regular {
@@ -52,7 +53,7 @@ let typedef = TypeDef::Regular {
 let ty = Type::Aggregate(&typedef);
 
 // After
-let typedef = Rc::new(TypeDef::Regular {
+let typedef = Arc::new(TypeDef::Regular {
     ident: "person".into(),
     align: None,
     items: vec![(Type::Long, 1), (Type::Word, 2)],
@@ -60,14 +61,14 @@ let typedef = Rc::new(TypeDef::Regular {
 let ty = Type::aggregate(&typedef);
 ```
 
-`Module::add_type()` now accepts `Rc<TypeDef>`:
+`Module::add_type()` now accepts `Arc<TypeDef>`:
 
 ```rust
 // Before
 module.add_type(typedef);
 
 // After
-module.add_type(Rc::new(typedef));
+module.add_type(Arc::new(typedef));
 ```
 
 All lifetime annotations on qbe types can be removed:
