@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 
 #### Sub-word loads
 
-`Load` with `Type::Byte` or `Type::Halfword` previously emitted invalid QBE IL (`loadb`/`loadh`). These now panic at runtime. Replace with the explicit signed/unsigned variant:
+`Load` with `Type::Byte` or `Type::Halfword` previously emitted invalid QBE IL (`loadb`/`loadh`). These now panic at runtime. Replace with the explicit signed/unsigned variant (see [QBE IL Memory reference](https://c9x.me/compile/doc/il.html#Memory)):
 
 ```rust
 // Before (produced invalid QBE IL)
