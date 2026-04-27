@@ -306,9 +306,70 @@ impl Parser {
     }
 
     fn parse_expr(&mut self) -> Result<Expr, String> {
+        self.parse_compare()
+    }
+
+    fn parse_compare(&mut self) -> Result<Expr, String> {
+        let mut lhs = self.parse_add()?;
+        while let Some(op) = self.peek_compare_op() {
+            self.bump();
+            let rhs = self.parse_add()?;
+            lhs = Expr::BinOp(op, Box::new(lhs), Box::new(rhs));
+        }
+        Ok(lhs)
+    }
+
+    fn peek_compare_op(&self) -> Option<BinOp> {
+        match self.peek() {
+            Token::Eq => Some(BinOp::Eq),
+            Token::NotEq => Some(BinOp::Ne),
+            Token::Lt => Some(BinOp::Lt),
+            Token::Gt => Some(BinOp::Gt),
+            Token::LtEq => Some(BinOp::Le),
+            Token::GtEq => Some(BinOp::Ge),
+            _ => None,
+        }
+    }
+
+    fn parse_add(&mut self) -> Result<Expr, String> {
+        let mut lhs = self.parse_mul()?;
+        loop {
+            let op = match self.peek() {
+                Token::Plus => BinOp::Add,
+                Token::Minus => BinOp::Sub,
+                _ => break,
+            };
+            self.bump();
+            let rhs = self.parse_mul()?;
+            lhs = Expr::BinOp(op, Box::new(lhs), Box::new(rhs));
+        }
+        Ok(lhs)
+    }
+
+    fn parse_mul(&mut self) -> Result<Expr, String> {
+        let mut lhs = self.parse_atom()?;
+        loop {
+            let op = match self.peek() {
+                Token::Star => BinOp::Mul,
+                Token::Slash => BinOp::Div,
+                _ => break,
+            };
+            self.bump();
+            let rhs = self.parse_atom()?;
+            lhs = Expr::BinOp(op, Box::new(lhs), Box::new(rhs));
+        }
+        Ok(lhs)
+    }
+
+    fn parse_atom(&mut self) -> Result<Expr, String> {
         match self.bump() {
             Token::Number(n) => Ok(Expr::Num(n)),
-            Token::Ident(name) => Ok(Expr::Var(name)),
+            Token::Ident(n) => Ok(Expr::Var(n)),
+            Token::LParen => {
+                let e = self.parse_expr()?;
+                self.expect(&Token::RParen, "to close parenthesised expression")?;
+                Ok(e)
+            }
             other => Err(format!("expected expression, found {other:?}")),
         }
     }
@@ -331,11 +392,8 @@ fn main() -> ExitCode {
 fn run() -> Result<(), String> {
     let source = read_source()?;
     let tokens = lex(&source)?;
-    let program = parse(tokens)?;
+    let _program = parse(tokens)?;
     let module = Module::new();
-    for (n, stmt) in &program {
-        eprintln!("# {n}: {stmt:?}");
-    }
     print!("{module}");
     Ok(())
 }
