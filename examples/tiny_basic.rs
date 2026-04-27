@@ -27,7 +27,8 @@
 //! cargo run --example tiny_basic factorial.bas | qbe -o out.s - && cc out.s -o factorial
 //! ```
 
-use qbe::Module;
+use qbe::{DataDef, DataItem, Function, Instr, Linkage, Module, Type, Value};
+use std::collections::HashSet;
 use std::io::Read;
 use std::process::ExitCode;
 
@@ -379,6 +380,119 @@ fn parse(tokens: Vec<Token>) -> Result<Vec<(u32, Stmt)>, String> {
     Parser::new(tokens).parse_program()
 }
 
+struct Codegen {
+    module: Module,
+    #[allow(dead_code)]
+    line_set: HashSet<u32>,
+    line_order: Vec<u32>,
+}
+
+impl Codegen {
+    fn new(program: &[(u32, Stmt)]) -> Self {
+        let line_order: Vec<u32> = program.iter().map(|(n, _)| *n).collect();
+        let line_set: HashSet<u32> = line_order.iter().copied().collect();
+        Self {
+            module: Module::new(),
+            line_set,
+            line_order,
+        }
+    }
+
+    fn line_label(n: u32) -> String {
+        format!("line_{n}")
+    }
+
+    fn next_label(&self, idx: usize) -> String {
+        match self.line_order.get(idx + 1) {
+            Some(n) => Self::line_label(*n),
+            None => "end_program".to_string(),
+        }
+    }
+
+    fn emit(mut self, program: &[(u32, Stmt)]) -> Result<Module, String> {
+        self.module.add_data(DataDef::new(
+            Linkage::private(),
+            "fmt_int",
+            None,
+            vec![
+                (Type::Byte, DataItem::Str("%d\\n".to_string())),
+                (Type::Byte, DataItem::Const(0)),
+            ],
+        ));
+
+        let mut main = Function::new(Linkage::public(), "main", Vec::new(), Some(Type::Word));
+
+        let vars = collect_vars(program);
+
+        main.add_block("entry");
+        for v in &vars {
+            main.assign_instr(
+                Value::Temporary(v.clone()),
+                Type::Long,
+                Instr::Alloc4(4),
+            );
+            main.add_instr(Instr::Store(
+                Type::Word,
+                Value::Temporary(v.clone()),
+                Value::Const(0),
+            ));
+        }
+        let first_label = match self.line_order.first() {
+            Some(n) => Self::line_label(*n),
+            None => "end_program".to_string(),
+        };
+        main.add_instr(Instr::Jmp(first_label));
+
+        for (idx, (n, _stmt)) in program.iter().enumerate() {
+            main.add_block(Self::line_label(*n));
+            main.add_instr(Instr::Jmp(self.next_label(idx)));
+        }
+
+        main.add_block("end_program");
+        main.add_instr(Instr::Ret(Some(Value::Const(0))));
+
+        self.module.add_function(main);
+        Ok(self.module)
+    }
+}
+
+fn collect_vars(program: &[(u32, Stmt)]) -> Vec<String> {
+    let mut seen: HashSet<String> = HashSet::new();
+    let mut order: Vec<String> = Vec::new();
+    for (_, stmt) in program {
+        match stmt {
+            Stmt::Let(name, e) => {
+                if seen.insert(name.clone()) {
+                    order.push(name.clone());
+                }
+                collect_expr_vars(e, &mut seen, &mut order);
+            }
+            Stmt::Print(e) | Stmt::If(e, _) => collect_expr_vars(e, &mut seen, &mut order),
+            Stmt::Goto(_) | Stmt::End | Stmt::Rem => {}
+        }
+    }
+    order
+}
+
+fn collect_expr_vars(e: &Expr, seen: &mut HashSet<String>, order: &mut Vec<String>) {
+    match e {
+        Expr::Num(_) => {}
+        Expr::Var(n) => {
+            if seen.insert(n.clone()) {
+                order.push(n.clone());
+            }
+        }
+        Expr::BinOp(_, l, r) => {
+            collect_expr_vars(l, seen, order);
+            collect_expr_vars(r, seen, order);
+        }
+    }
+}
+
+fn codegen(program: &[(u32, Stmt)]) -> Result<Module, String> {
+    Codegen::new(program).emit(program)
+}
+
 fn main() -> ExitCode {
     match run() {
         Ok(()) => ExitCode::SUCCESS,
@@ -392,8 +506,8 @@ fn main() -> ExitCode {
 fn run() -> Result<(), String> {
     let source = read_source()?;
     let tokens = lex(&source)?;
-    let _program = parse(tokens)?;
-    let module = Module::new();
+    let program = parse(tokens)?;
+    let module = codegen(&program)?;
     print!("{module}");
     Ok(())
 }
