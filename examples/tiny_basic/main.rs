@@ -443,11 +443,7 @@ impl Codegen {
         match stmt {
             Stmt::Let(name, e) => {
                 let v = self.lower_expr(func, e);
-                func.add_instr(Instr::Store(
-                    Type::Word,
-                    Value::Temporary(name.clone()),
-                    v,
-                ));
+                func.add_instr(Instr::Store(Type::Word, Value::Temporary(name.clone()), v));
                 func.add_instr(Instr::Jmp(next_label.to_string()));
             }
             Stmt::Print(e) => {
@@ -506,11 +502,7 @@ impl Codegen {
 
         main.add_block("entry");
         for v in &vars {
-            main.assign_instr(
-                Value::Temporary(v.clone()),
-                Type::Long,
-                Instr::Alloc4(4),
-            );
+            main.assign_instr(Value::Temporary(v.clone()), Type::Long, Instr::Alloc4(4));
             main.add_instr(Instr::Store(
                 Type::Word,
                 Value::Temporary(v.clone()),
@@ -596,8 +588,9 @@ fn run() -> Result<(), String> {
 fn read_source() -> Result<String, String> {
     let mut args = std::env::args().skip(1);
     match args.next() {
-        Some(path) => std::fs::read_to_string(&path)
-            .map_err(|e| format!("cannot read {path}: {e}")),
+        Some(path) => {
+            std::fs::read_to_string(&path).map_err(|e| format!("cannot read {path}: {e}"))
+        }
         None => {
             let mut buf = String::new();
             std::io::stdin()
