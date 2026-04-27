@@ -58,6 +58,40 @@ enum Token {
     Eof,
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum Stmt {
+    Let(String, Expr),
+    Print(Expr),
+    If(Expr, u32),
+    Goto(u32),
+    End,
+    Rem,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+enum Expr {
+    Num(u32),
+    Var(String),
+    BinOp(BinOp, Box<Expr>, Box<Expr>),
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
+enum BinOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Eq,
+    Ne,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+}
+
 fn lex(source: &str) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
     let bytes = source.as_bytes();
@@ -99,6 +133,11 @@ fn lex(source: &str) -> Result<Vec<Token>, String> {
                     _ => Token::Ident(word.to_string()),
                 };
                 tokens.push(tok);
+                if matches!(tokens.last(), Some(Token::Rem)) {
+                    while i < bytes.len() && bytes[i] != b'\n' {
+                        i += 1;
+                    }
+                }
             }
             b'+' => {
                 tokens.push(Token::Plus);
@@ -158,6 +197,127 @@ fn lex(source: &str) -> Result<Vec<Token>, String> {
     Ok(tokens)
 }
 
+struct Parser {
+    tokens: Vec<Token>,
+    pos: usize,
+}
+
+impl Parser {
+    fn new(tokens: Vec<Token>) -> Self {
+        Self { tokens, pos: 0 }
+    }
+
+    fn peek(&self) -> &Token {
+        &self.tokens[self.pos]
+    }
+
+    fn bump(&mut self) -> Token {
+        let t = self.tokens[self.pos].clone();
+        if !matches!(t, Token::Eof) {
+            self.pos += 1;
+        }
+        t
+    }
+
+    fn expect(&mut self, expected: &Token, ctx: &str) -> Result<(), String> {
+        if self.peek() == expected {
+            self.bump();
+            Ok(())
+        } else {
+            Err(format!(
+                "expected {expected:?} {ctx}, found {:?}",
+                self.peek()
+            ))
+        }
+    }
+
+    fn parse_program(&mut self) -> Result<Vec<(u32, Stmt)>, String> {
+        let mut lines: Vec<(u32, Stmt)> = Vec::new();
+        loop {
+            while matches!(self.peek(), Token::Newline) {
+                self.bump();
+            }
+            if matches!(self.peek(), Token::Eof) {
+                break;
+            }
+            let lineno = match self.bump() {
+                Token::Number(n) => n,
+                other => return Err(format!("expected line number, found {other:?}")),
+            };
+            let stmt = self.parse_stmt()?;
+            match self.peek() {
+                Token::Newline | Token::Eof => {}
+                other => {
+                    return Err(format!(
+                        "expected end of line after statement, found {other:?}"
+                    ));
+                }
+            }
+            lines.push((lineno, stmt));
+        }
+        lines.sort_by_key(|(n, _)| *n);
+        for pair in lines.windows(2) {
+            if pair[0].0 == pair[1].0 {
+                return Err(format!("duplicate line number {}", pair[0].0));
+            }
+        }
+        Ok(lines)
+    }
+
+    fn parse_stmt(&mut self) -> Result<Stmt, String> {
+        match self.bump() {
+            Token::Let => {
+                let name = match self.bump() {
+                    Token::Ident(n) => n,
+                    other => return Err(format!("expected identifier after LET, found {other:?}")),
+                };
+                self.expect(&Token::Eq, "after LET <ident>")?;
+                let e = self.parse_expr()?;
+                Ok(Stmt::Let(name, e))
+            }
+            Token::Print => {
+                let e = self.parse_expr()?;
+                Ok(Stmt::Print(e))
+            }
+            Token::If => {
+                let cond = self.parse_expr()?;
+                self.expect(&Token::Then, "after IF <expr>")?;
+                let target = match self.bump() {
+                    Token::Number(n) => n,
+                    other => {
+                        return Err(format!("expected line number after THEN, found {other:?}"));
+                    }
+                };
+                Ok(Stmt::If(cond, target))
+            }
+            Token::Goto => match self.bump() {
+                Token::Number(n) => Ok(Stmt::Goto(n)),
+                other => Err(format!("expected line number after GOTO, found {other:?}")),
+            },
+            Token::End => Ok(Stmt::End),
+            Token::Rem => {
+                while !matches!(self.peek(), Token::Newline | Token::Eof) {
+                    self.bump();
+                }
+                Ok(Stmt::Rem)
+            }
+            other => Err(format!("expected statement keyword, found {other:?}")),
+        }
+    }
+
+    fn parse_expr(&mut self) -> Result<Expr, String> {
+        match self.bump() {
+            Token::Number(n) => Ok(Expr::Num(n)),
+            Token::Ident(name) => Ok(Expr::Var(name)),
+            other => Err(format!("expected expression, found {other:?}")),
+        }
+    }
+}
+
+fn parse(tokens: Vec<Token>) -> Result<Vec<(u32, Stmt)>, String> {
+    Parser::new(tokens).parse_program()
+}
+
 fn main() -> ExitCode {
     match run() {
         Ok(()) => ExitCode::SUCCESS,
@@ -171,9 +331,10 @@ fn main() -> ExitCode {
 fn run() -> Result<(), String> {
     let source = read_source()?;
     let tokens = lex(&source)?;
+    let program = parse(tokens)?;
     let module = Module::new();
-    for tok in &tokens {
-        eprintln!("# {tok:?}");
+    for (n, stmt) in &program {
+        eprintln!("# {n}: {stmt:?}");
     }
     print!("{module}");
     Ok(())
