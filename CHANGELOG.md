@@ -8,7 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - New example `tiny_basic`: a BASIC-subset compiler that demonstrates an
   end-to-end source-to-IL pipeline (lexer, parser, codegen). Closes
-  [#9](https://github.com/garritfra/qbe-rs/issues/9).
+  [#9](https://github.com/garritfra/qbe-rs/issues/9)
+  ([#60](https://github.com/garritfra/qbe-rs/pull/60)).
 
 ## [4.0.0] - 2026-03-23
 
