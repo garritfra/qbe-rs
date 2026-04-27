@@ -496,8 +496,7 @@ impl Codegen {
                 func.add_instr(Instr::Jmp(Self::line_label(*target)));
             }
             Stmt::End => {
-                // Implemented in Task 8.
-                func.add_instr(Instr::Jmp(next_label.to_string()));
+                func.add_instr(Instr::Ret(Some(Value::Const(0))));
             }
         }
         Ok(())
