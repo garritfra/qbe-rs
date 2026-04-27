@@ -27,7 +27,7 @@
 //! cargo run --example tiny_basic factorial.bas | qbe -o out.s - && cc out.s -o factorial
 //! ```
 
-use qbe::{DataDef, DataItem, Function, Instr, Linkage, Module, Type, Value};
+use qbe::{Cmp, DataDef, DataItem, Function, Instr, Linkage, Module, Type, Value};
 use std::collections::HashSet;
 use std::io::Read;
 use std::process::ExitCode;
@@ -70,7 +70,6 @@ enum Stmt {
     Rem,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 enum Expr {
     Num(u32),
@@ -78,7 +77,6 @@ enum Expr {
     BinOp(BinOp, Box<Expr>, Box<Expr>),
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 enum BinOp {
     Add,
@@ -385,6 +383,7 @@ struct Codegen {
     #[allow(dead_code)]
     line_set: HashSet<u32>,
     line_order: Vec<u32>,
+    next_temp: u32,
 }
 
 impl Codegen {
@@ -395,6 +394,7 @@ impl Codegen {
             module: Module::new(),
             line_set,
             line_order,
+            next_temp: 0,
         }
     }
 
@@ -407,6 +407,85 @@ impl Codegen {
             Some(n) => Self::line_label(*n),
             None => "end_program".to_string(),
         }
+    }
+
+    fn fresh_temp(&mut self) -> Value {
+        let v = Value::Temporary(format!("t{}", self.next_temp));
+        self.next_temp += 1;
+        v
+    }
+
+    fn lower_expr(&mut self, func: &mut Function, e: &Expr) -> Value {
+        match e {
+            Expr::Num(n) => Value::Const(*n as u64),
+            Expr::Var(name) => {
+                let dest = self.fresh_temp();
+                func.assign_instr(
+                    dest.clone(),
+                    Type::Word,
+                    Instr::Load(Type::Word, Value::Temporary(name.clone())),
+                );
+                dest
+            }
+            Expr::BinOp(op, l, r) => {
+                let lv = self.lower_expr(func, l);
+                let rv = self.lower_expr(func, r);
+                let dest = self.fresh_temp();
+                let instr = match op {
+                    BinOp::Add => Instr::Add(lv, rv),
+                    BinOp::Sub => Instr::Sub(lv, rv),
+                    BinOp::Mul => Instr::Mul(lv, rv),
+                    BinOp::Div => Instr::Div(lv, rv),
+                    BinOp::Eq => Instr::Cmp(Type::Word, Cmp::Eq, lv, rv),
+                    BinOp::Ne => Instr::Cmp(Type::Word, Cmp::Ne, lv, rv),
+                    BinOp::Lt => Instr::Cmp(Type::Word, Cmp::Slt, lv, rv),
+                    BinOp::Gt => Instr::Cmp(Type::Word, Cmp::Sgt, lv, rv),
+                    BinOp::Le => Instr::Cmp(Type::Word, Cmp::Sle, lv, rv),
+                    BinOp::Ge => Instr::Cmp(Type::Word, Cmp::Sge, lv, rv),
+                };
+                func.assign_instr(dest.clone(), Type::Word, instr);
+                dest
+            }
+        }
+    }
+
+    fn lower_stmt(
+        &mut self,
+        func: &mut Function,
+        stmt: &Stmt,
+        next_label: &str,
+    ) -> Result<(), String> {
+        match stmt {
+            Stmt::Let(name, e) => {
+                let v = self.lower_expr(func, e);
+                func.add_instr(Instr::Store(
+                    Type::Word,
+                    Value::Temporary(name.clone()),
+                    v,
+                ));
+                func.add_instr(Instr::Jmp(next_label.to_string()));
+            }
+            Stmt::Print(e) => {
+                let v = self.lower_expr(func, e);
+                func.add_instr(Instr::Call(
+                    "printf".to_string(),
+                    vec![
+                        (Type::Long, Value::Global("fmt_int".to_string())),
+                        (Type::Word, v),
+                    ],
+                    Some(1),
+                ));
+                func.add_instr(Instr::Jmp(next_label.to_string()));
+            }
+            Stmt::Rem => {
+                func.add_instr(Instr::Jmp(next_label.to_string()));
+            }
+            Stmt::If(_, _) | Stmt::Goto(_) | Stmt::End => {
+                // Implemented in Tasks 7 and 8.
+                func.add_instr(Instr::Jmp(next_label.to_string()));
+            }
+        }
+        Ok(())
     }
 
     fn emit(mut self, program: &[(u32, Stmt)]) -> Result<Module, String> {
@@ -443,9 +522,10 @@ impl Codegen {
         };
         main.add_instr(Instr::Jmp(first_label));
 
-        for (idx, (n, _stmt)) in program.iter().enumerate() {
+        for (idx, (n, stmt)) in program.iter().enumerate() {
             main.add_block(Self::line_label(*n));
-            main.add_instr(Instr::Jmp(self.next_label(idx)));
+            let next = self.next_label(idx);
+            self.lower_stmt(&mut main, stmt, &next)?;
         }
 
         main.add_block("end_program");
