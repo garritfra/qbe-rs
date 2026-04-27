@@ -15,8 +15,14 @@ way to parse existing IR is planned.
 This crate is on [crates.io](https://crates.io/crates/qbe), so you can simply
 add it as a dependency in your Cargo.toml and off you go.
 
-If you don't know where to get started, check out the `hello_world` example in
-the `examples/` directory.
+If you don't know where to get started, check out the examples in the
+`examples/` directory:
+
+- `hello_world` — the smallest possible use of the API; build a `Module` by
+  hand and print it.
+- `tiny_basic` — an end-to-end compiler for a BASIC subset (lexer, parser,
+  codegen). Run it with
+  `cargo run --example tiny_basic path/to/program.bas | qbe -o out.s -`.
 
 ## Contributing
 
