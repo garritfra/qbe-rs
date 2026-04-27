@@ -5,27 +5,19 @@
 //! Writes QBE IL to stdout.
 //!
 //! Supported statements: `LET`, `PRINT`, `IF ... THEN <line>`, `GOTO`, `END`,
-//! `REM`. All values are 32-bit signed integers.
+//! `REM`. All values are 32-bit signed integers. See `README.md` next to this
+//! file for the language reference and ready-to-run sample programs.
 //!
-//! Example program (factorial of 5):
-//!
-//! ```text
-//! 10 LET N = 5
-//! 20 LET F = 1
-//! 30 IF N <= 1 THEN 60
-//! 40 LET F = F * N
-//! 50 LET N = N - 1
-//! 55 GOTO 30
-//! 60 PRINT F
-//! 70 END
-//! ```
-//!
-//! Pipe the generated IL through `qbe` and a C compiler to produce a runnable
-//! binary:
+//! Quick start (from the repo root):
 //!
 //! ```sh
-//! cargo run --example tiny_basic factorial.bas | qbe -o out.s - && cc out.s -o factorial
+//! cargo run --example tiny_basic examples/tiny_basic/factorial.bas \
+//!   | qbe -o /tmp/out.s - \
+//!   && cc /tmp/out.s -o /tmp/program \
+//!   && /tmp/program
 //! ```
+//!
+//! Expected output: `120` (factorial of 5).
 
 use qbe::{Cmp, DataDef, DataItem, Function, Instr, Linkage, Module, Type, Value};
 use std::collections::HashSet;

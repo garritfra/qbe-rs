@@ -59,8 +59,14 @@ Expected output: `120`.
 
 ## Architecture
 
-Single file `examples/tiny_basic.rs`, no external dependencies. Three small
-modules grouped by responsibility, plus `main`.
+Multi-file example under `examples/tiny_basic/`:
+
+- `main.rs` — the compiler itself (single file, no external dependencies),
+  containing three pass-style modules grouped by responsibility plus `main`.
+  Cargo auto-detects `examples/<name>/main.rs` as a multi-file example, so no
+  `Cargo.toml` entry is needed.
+- `factorial.bas`, `hello.bas`, `fibonacci.bas` — runnable sample programs.
+- `README.md` — language reference and copy-pasteable run recipe.
 
 ### Module 1: Lexer
 
@@ -256,10 +262,11 @@ add a sibling example.
 
 ## Trade-offs considered
 
-**Single file vs. submodule.** A single `.rs` keeps the example trivial to
-discover (`cargo run --example tiny_basic`) and matches `hello_world.rs`'s
-style. Splitting would require an `[[example]]` manifest entry and an
-`examples/tiny_basic/` directory; not worth it at ~400 LOC.
+**Single file vs. directory.** Originally a single file to match
+`hello_world.rs`'s style. Switched to a directory (`examples/tiny_basic/`)
+so sample `.bas` programs can ship next to the compiler. Cargo
+auto-detects `examples/<name>/main.rs`, so no manifest churn was needed.
+The compiler itself remains a single ~600 LOC `main.rs`.
 
 **Stack slots for variables vs. SSA temporaries.** Stack slots win. BASIC
 variables are mutable and live across blocks, so SSA would require phi
