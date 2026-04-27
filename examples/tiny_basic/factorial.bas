@@ -1,0 +1,8 @@
+10 LET N = 5
+20 LET F = 1
+30 IF N <= 1 THEN 60
+40 LET F = F * N
+50 LET N = N - 1
+55 GOTO 30
+60 PRINT F
+70 END

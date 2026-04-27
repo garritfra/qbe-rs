@@ -21,8 +21,9 @@ If you don't know where to get started, check out the examples in the
 - `hello_world` — the smallest possible use of the API; build a `Module` by
   hand and print it.
 - `tiny_basic` — an end-to-end compiler for a BASIC subset (lexer, parser,
-  codegen). Run it with
-  `cargo run --example tiny_basic path/to/program.bas | qbe -o out.s - && cc out.s -o program`.
+  codegen) with sample `.bas` programs. See
+  [`examples/tiny_basic/README.md`](examples/tiny_basic/README.md) for the
+  language reference and run instructions.
 
 ## Contributing
 
