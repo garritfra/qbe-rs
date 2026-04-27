@@ -31,6 +31,133 @@ use qbe::Module;
 use std::io::Read;
 use std::process::ExitCode;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Token {
+    Let,
+    Print,
+    If,
+    Then,
+    Goto,
+    End,
+    Rem,
+    Ident(String),
+    Number(u32),
+    Eq,
+    NotEq,
+    Lt,
+    Gt,
+    LtEq,
+    GtEq,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    LParen,
+    RParen,
+    Newline,
+    Eof,
+}
+
+fn lex(source: &str) -> Result<Vec<Token>, String> {
+    let mut tokens = Vec::new();
+    let bytes = source.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = bytes[i];
+        match c {
+            b' ' | b'\t' | b'\r' => i += 1,
+            b'\n' => {
+                tokens.push(Token::Newline);
+                i += 1;
+            }
+            b'0'..=b'9' => {
+                let start = i;
+                while i < bytes.len() && bytes[i].is_ascii_digit() {
+                    i += 1;
+                }
+                let n: u32 = source[start..i]
+                    .parse()
+                    .map_err(|e| format!("invalid integer literal: {e}"))?;
+                tokens.push(Token::Number(n));
+            }
+            b'A'..=b'Z' => {
+                let start = i;
+                while i < bytes.len()
+                    && (bytes[i].is_ascii_uppercase() || bytes[i].is_ascii_digit())
+                {
+                    i += 1;
+                }
+                let word = &source[start..i];
+                let tok = match word {
+                    "LET" => Token::Let,
+                    "PRINT" => Token::Print,
+                    "IF" => Token::If,
+                    "THEN" => Token::Then,
+                    "GOTO" => Token::Goto,
+                    "END" => Token::End,
+                    "REM" => Token::Rem,
+                    _ => Token::Ident(word.to_string()),
+                };
+                tokens.push(tok);
+            }
+            b'+' => {
+                tokens.push(Token::Plus);
+                i += 1;
+            }
+            b'-' => {
+                tokens.push(Token::Minus);
+                i += 1;
+            }
+            b'*' => {
+                tokens.push(Token::Star);
+                i += 1;
+            }
+            b'/' => {
+                tokens.push(Token::Slash);
+                i += 1;
+            }
+            b'(' => {
+                tokens.push(Token::LParen);
+                i += 1;
+            }
+            b')' => {
+                tokens.push(Token::RParen);
+                i += 1;
+            }
+            b'=' => {
+                tokens.push(Token::Eq);
+                i += 1;
+            }
+            b'<' => {
+                if bytes.get(i + 1) == Some(&b'=') {
+                    tokens.push(Token::LtEq);
+                    i += 2;
+                } else if bytes.get(i + 1) == Some(&b'>') {
+                    tokens.push(Token::NotEq);
+                    i += 2;
+                } else {
+                    tokens.push(Token::Lt);
+                    i += 1;
+                }
+            }
+            b'>' => {
+                if bytes.get(i + 1) == Some(&b'=') {
+                    tokens.push(Token::GtEq);
+                    i += 2;
+                } else {
+                    tokens.push(Token::Gt);
+                    i += 1;
+                }
+            }
+            other => {
+                return Err(format!("unexpected character {:?}", other as char));
+            }
+        }
+    }
+    tokens.push(Token::Eof);
+    Ok(tokens)
+}
+
 fn main() -> ExitCode {
     match run() {
         Ok(()) => ExitCode::SUCCESS,
@@ -42,8 +169,12 @@ fn main() -> ExitCode {
 }
 
 fn run() -> Result<(), String> {
-    let _source = read_source()?;
+    let source = read_source()?;
+    let tokens = lex(&source)?;
     let module = Module::new();
+    for tok in &tokens {
+        eprintln!("# {tok:?}");
+    }
     print!("{module}");
     Ok(())
 }
