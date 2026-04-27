@@ -87,8 +87,12 @@ The lexer is a straightforward character cursor:
 
 - Skip space and tab.
 - A newline emits `Newline` and advances.
-- The keyword `REM` is emitted as a token; the parser, not the lexer, is
-  responsible for discarding the rest of the line. (See parser.)
+- When the lexer recognises the `REM` keyword, it emits `Token::Rem` and
+  then advances past the rest of the line (up to but not including the
+  trailing `\n`) without lexing the comment text. Comments may therefore
+  contain arbitrary characters (including lowercase letters and punctuation
+  not otherwise in the language) without producing lex errors. The parser
+  sees a single `Token::Rem` followed immediately by `Token::Newline`/`Eof`.
 - Digits accumulate into `Number`.
 - Letters accumulate into an identifier; if the result matches a keyword,
   emit the keyword token, otherwise `Ident`.
