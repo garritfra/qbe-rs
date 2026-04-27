@@ -293,12 +293,7 @@ impl Parser {
                 other => Err(format!("expected line number after GOTO, found {other:?}")),
             },
             Token::End => Ok(Stmt::End),
-            Token::Rem => {
-                while !matches!(self.peek(), Token::Newline | Token::Eof) {
-                    self.bump();
-                }
-                Ok(Stmt::Rem)
-            }
+            Token::Rem => Ok(Stmt::Rem),
             other => Err(format!("expected statement keyword, found {other:?}")),
         }
     }
