@@ -59,7 +59,6 @@ enum Token {
     Eof,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 enum Stmt {
     Let(String, Expr),
@@ -380,7 +379,6 @@ fn parse(tokens: Vec<Token>) -> Result<Vec<(u32, Stmt)>, String> {
 
 struct Codegen {
     module: Module,
-    #[allow(dead_code)]
     line_set: HashSet<u32>,
     line_order: Vec<u32>,
     next_temp: u32,
@@ -480,8 +478,25 @@ impl Codegen {
             Stmt::Rem => {
                 func.add_instr(Instr::Jmp(next_label.to_string()));
             }
-            Stmt::If(_, _) | Stmt::Goto(_) | Stmt::End => {
-                // Implemented in Tasks 7 and 8.
+            Stmt::If(cond, target) => {
+                if !self.line_set.contains(target) {
+                    return Err(format!("IF...THEN target {target} is not a line number"));
+                }
+                let v = self.lower_expr(func, cond);
+                func.add_instr(Instr::Jnz(
+                    v,
+                    Self::line_label(*target),
+                    next_label.to_string(),
+                ));
+            }
+            Stmt::Goto(target) => {
+                if !self.line_set.contains(target) {
+                    return Err(format!("GOTO target {target} is not a line number"));
+                }
+                func.add_instr(Instr::Jmp(Self::line_label(*target)));
+            }
+            Stmt::End => {
+                // Implemented in Task 8.
                 func.add_instr(Instr::Jmp(next_label.to_string()));
             }
         }
