@@ -39,7 +39,7 @@
 //!
 //! // Add two arguments and store result in "sum"
 //! block.assign_instr(
-//!     Value::Temporary("sum".to_string()),
+//!     "sum",
 //!     Type::Word,
 //!     Instr::Add(
 //!         Value::Temporary("a".to_string()),
@@ -867,7 +867,7 @@ impl fmt::Display for TypeDef {
 /// An IR statement
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Statement {
-    Assign(Value, Type, Instr),
+    Assign(String, Type, Instr),
     Volatile(Instr),
 }
 
@@ -875,11 +875,7 @@ impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Assign(temp, ty, instr) => {
-                assert!(
-                    matches!(temp, Value::Temporary(_)),
-                    "assignment target must be a temporary, got {temp:?}"
-                );
-                write!(f, "{temp} ={ty} {instr}")
+                write!(f, "%{temp} ={ty} {instr}")
             }
             Self::Volatile(instr) => write!(f, "{instr}"),
         }
@@ -908,7 +904,7 @@ impl fmt::Display for Statement {
 ///
 /// // Increment loop counter: %i = %i + 1
 /// block.assign_instr(
-///     Value::Temporary("i".to_string()),
+///     "i",
 ///     Type::Word,
 ///     Instr::Add(
 ///         Value::Temporary("i".to_string()),
@@ -918,7 +914,7 @@ impl fmt::Display for Statement {
 ///
 /// // Update sum: %sum = %sum + %value
 /// block.assign_instr(
-///     Value::Temporary("sum".to_string()),
+///     "sum",
 ///     Type::Word,
 ///     Instr::Add(
 ///         Value::Temporary("sum".to_string()),
@@ -969,14 +965,16 @@ impl Block {
     }
 
     /// Adds a new instruction assigned to a temporary
-    pub fn assign_instr(&mut self, temp: Value, ty: Type, instr: Instr) {
+    pub fn assign_instr(&mut self, temp: impl Into<String>, ty: Type, instr: Instr) {
         let final_type = match instr {
             Instr::Call(_, _, _) => ty,
             _ => ty.into_base(),
         };
 
         self.items.push(BlockItem::Statement(Statement::Assign(
-            temp, final_type, instr,
+            temp.into(),
+            final_type,
+            instr,
         )));
     }
 
@@ -1031,7 +1029,7 @@ impl fmt::Display for Block {
 ///
 /// // Calculate n % 2 (by using n & 1)
 /// start.assign_instr(
-///     Value::Temporary("remainder".to_string()),
+///     "remainder",
 ///     Type::Word,
 ///     Instr::And(
 ///         Value::Temporary("n".to_string()),
@@ -1041,7 +1039,7 @@ impl fmt::Display for Block {
 ///
 /// // Check if remainder is 0 (even number)
 /// start.assign_instr(
-///     Value::Temporary("is_zero".to_string()),
+///     "is_zero",
 ///     Type::Word,
 ///     Instr::Cmp(
 ///         Type::Word,
@@ -1126,11 +1124,11 @@ impl Function {
     /// # Panics
     ///
     /// Panics if the function has no blocks.
-    pub fn assign_instr(&mut self, temp: Value, ty: Type, instr: Instr) {
+    pub fn assign_instr(&mut self, temp: impl Into<String>, ty: Type, instr: Instr) {
         self.blocks
             .last_mut()
             .expect("Last block must be present")
-            .assign_instr(temp, ty, instr);
+            .assign_instr(temp.into(), ty, instr);
     }
 }
 
@@ -1306,7 +1304,7 @@ impl fmt::Display for Linkage {
 ///
 /// // Call printf with the string: %r = call $printf(l $hello)
 /// start.assign_instr(
-///     Value::Temporary("r".to_string()),
+///     "r",
 ///     Type::Word,
 ///     Instr::Call(
 ///         "printf".to_string(),

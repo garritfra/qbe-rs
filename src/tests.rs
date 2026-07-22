@@ -39,7 +39,7 @@ fn block() {
         items: vec![
             BlockItem::Comment("Comment".into()),
             BlockItem::Statement(Statement::Assign(
-                Value::Temporary("foo".into()),
+                "foo".into(),
                 Type::Word,
                 Instr::Add(Value::Const(2), Value::Const(2)),
             )),
@@ -513,14 +513,14 @@ fn comparison_types() {
 #[test]
 fn unsigned_arithmetic_instructions() {
     let udiv = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Udiv(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
     assert_eq!(format!("{udiv}"), "%result =w udiv %a, %b");
 
     let urem = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Long,
         Instr::Urem(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
@@ -530,21 +530,21 @@ fn unsigned_arithmetic_instructions() {
 #[test]
 fn shift_instructions() {
     let sar = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Sar(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
     assert_eq!(format!("{sar}"), "%result =w sar %a, %b");
 
     let shr = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Long,
         Instr::Shr(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
     assert_eq!(format!("{shr}"), "%result =l shr %a, %b");
 
     let shl = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Shl(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
@@ -554,14 +554,14 @@ fn shift_instructions() {
 #[test]
 fn cast_instruction() {
     let cast_int_to_float = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Single,
         Instr::Cast(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{cast_int_to_float}"), "%result =s cast %a");
 
     let cast_float_to_int = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Cast(Value::Temporary("f".into())),
     );
@@ -571,42 +571,42 @@ fn cast_instruction() {
 #[test]
 fn extension_operations() {
     let extsw = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Long,
         Instr::Extsw(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{extsw}"), "%result =l extsw %a");
 
     let extuw = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Long,
         Instr::Extuw(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{extuw}"), "%result =l extuw %a");
 
     let extsh = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Extsh(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{extsh}"), "%result =w extsh %a");
 
     let extuh = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Extuh(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{extuh}"), "%result =w extuh %a");
 
     let extsb = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Extsb(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{extsb}"), "%result =w extsb %a");
 
     let extub = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Extub(Value::Temporary("a".into())),
     );
@@ -616,14 +616,14 @@ fn extension_operations() {
 #[test]
 fn float_precision_conversion() {
     let exts = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Double,
         Instr::Exts(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{exts}"), "%result =d exts %a");
 
     let truncd = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Single,
         Instr::Truncd(Value::Temporary("a".into())),
     );
@@ -633,56 +633,56 @@ fn float_precision_conversion() {
 #[test]
 fn float_integer_conversions() {
     let stosi = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Stosi(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{stosi}"), "%result =w stosi %a");
 
     let stoui = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Stoui(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{stoui}"), "%result =w stoui %a");
 
     let dtosi = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Long,
         Instr::Dtosi(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{dtosi}"), "%result =l dtosi %a");
 
     let dtoui = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Long,
         Instr::Dtoui(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{dtoui}"), "%result =l dtoui %a");
 
     let swtof = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Single,
         Instr::Swtof(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{swtof}"), "%result =s swtof %a");
 
     let uwtof = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Single,
         Instr::Uwtof(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{uwtof}"), "%result =s uwtof %a");
 
     let sltof = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Double,
         Instr::Sltof(Value::Temporary("a".into())),
     );
     assert_eq!(format!("{sltof}"), "%result =d sltof %a");
 
     let ultof = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Double,
         Instr::Ultof(Value::Temporary("a".into())),
     );
@@ -695,7 +695,7 @@ fn variadic_instructions() {
     assert_eq!(format!("{vastart}"), "vastart %ap");
 
     let vaarg = Statement::Assign(
-        Value::Temporary("arg".into()),
+        "arg".into(),
         Type::Word,
         Instr::Vaarg(Type::Word, Value::Temporary("ap".into())),
     );
@@ -711,7 +711,7 @@ fn phi_instruction() {
     assert_eq!(format!("{phi}"), "phi @ift 2, @iff %3");
 
     let phi = Statement::Assign(
-        Value::Temporary("result".into()),
+        "result".into(),
         Type::Word,
         Instr::Phi(vec![
             ("start".into(), Value::Temporary("1".into())),
@@ -728,7 +728,7 @@ fn phi_instruction() {
     assert_eq!(format!("{phi}"), "phi @case1 10, @case2 20, @case3 30");
 
     let phi = Statement::Assign(
-        Value::Temporary("merged".into()),
+        "merged".into(),
         Type::Long,
         Instr::Phi(vec![
             ("path_a".into(), Value::Temporary("x".into())),
@@ -814,28 +814,28 @@ fn complex_block_with_multiple_instructions() {
 
     // Add unsigned division
     block.assign_instr(
-        Value::Temporary("udiv_result".into()),
+        "udiv_result",
         Type::Word,
         Instr::Udiv(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
 
     // Add a shift operation
     block.assign_instr(
-        Value::Temporary("shift_result".into()),
+        "shift_result",
         Type::Word,
         Instr::Shl(Value::Temporary("a".into()), Value::Temporary("b".into())),
     );
 
     // Add a cast operation
     block.assign_instr(
-        Value::Temporary("cast_result".into()),
+        "cast_result",
         Type::Single,
         Instr::Cast(Value::Temporary("shift_result".into())),
     );
 
     // Add a comparison (unordered)
     block.assign_instr(
-        Value::Temporary("cmp_result".into()),
+        "cmp_result",
         Type::Word,
         Instr::Cmp(
             Type::Single,
@@ -874,13 +874,13 @@ fn assign_instr_aggregate_type_coercion() {
     });
 
     block.assign_instr(
-        Value::Temporary("human".into()),
+        "human",
         Type::aggregate(&typedef),
         Instr::Alloc8(Type::aggregate(&typedef).size()),
     );
 
     block.assign_instr(
-        Value::Temporary("result".into()),
+        "result",
         Type::aggregate(&typedef),
         Instr::Call("new_person".into(), vec![], None),
     );
