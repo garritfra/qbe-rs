@@ -4,8 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- BREAKING: `Value::Temporary` now holds a `Temporary(String)` instead of a `String`
+- BREAKING: `Value::Global` now holds a `Global(String)` instead of a `String`
+- BREAKING: `Statement::Assign`'s first type is now a `Temporary` instead of a `Value`
+- BREAKING: `Block::assign_instr`'s first argument is now `impl Into<String>` instead of `Value`
+
 ### Added
 
+- `Value` provides a `temporary` convenience constructor
+- `Value` provides a `global` convenience constructor
 - New example `tiny_basic`: a BASIC-subset compiler that demonstrates an
   end-to-end source-to-IL pipeline (lexer, parser, codegen). Closes
   [#9](https://github.com/garritfra/qbe-rs/issues/9)
