@@ -395,27 +395,33 @@ impl Codegen {
     }
 
     fn fresh_temp(&mut self) -> Value {
-        let v = Value::Temporary(format!("t{}", self.next_temp));
+        let v = Value::temporary(&format!("t{}", self.next_temp));
         self.next_temp += 1;
         v
+    }
+    fn fresh_temp_with_name(&mut self) -> (Value, String) {
+        let name = format!("t{}", self.next_temp);
+        let v = Value::temporary(name.as_str());
+        self.next_temp += 1;
+        (v, name)
     }
 
     fn lower_expr(&mut self, func: &mut Function, e: &Expr) -> Value {
         match e {
             Expr::Num(n) => Value::Const(*n as u64),
             Expr::Var(name) => {
-                let dest = self.fresh_temp();
+                let (dest, destname) = self.fresh_temp_with_name();
                 func.assign_instr(
-                    dest.clone(),
+                    destname,
                     Type::Word,
-                    Instr::Load(Type::Word, Value::Temporary(name.clone())),
+                    Instr::Load(Type::Word, Value::temporary(name.as_str())),
                 );
                 dest
             }
             Expr::BinOp(op, l, r) => {
                 let lv = self.lower_expr(func, l);
                 let rv = self.lower_expr(func, r);
-                let dest = self.fresh_temp();
+                let (dest, destname) = self.fresh_temp_with_name();
                 let instr = match op {
                     BinOp::Add => Instr::Add(lv, rv),
                     BinOp::Sub => Instr::Sub(lv, rv),
@@ -428,7 +434,7 @@ impl Codegen {
                     BinOp::Le => Instr::Cmp(Type::Word, Cmp::Sle, lv, rv),
                     BinOp::Ge => Instr::Cmp(Type::Word, Cmp::Sge, lv, rv),
                 };
-                func.assign_instr(dest.clone(), Type::Word, instr);
+                func.assign_instr(destname, Type::Word, instr);
                 dest
             }
         }
@@ -443,17 +449,14 @@ impl Codegen {
         match stmt {
             Stmt::Let(name, e) => {
                 let v = self.lower_expr(func, e);
-                func.add_instr(Instr::Store(Type::Word, Value::Temporary(name.clone()), v));
+                func.add_instr(Instr::Store(Type::Word, Value::temporary(name.as_str()), v));
                 func.add_instr(Instr::Jmp(next_label.to_string()));
             }
             Stmt::Print(e) => {
                 let v = self.lower_expr(func, e);
                 func.add_instr(Instr::Call(
                     "printf".to_string(),
-                    vec![
-                        (Type::Long, Value::Global("fmt_int".to_string())),
-                        (Type::Word, v),
-                    ],
+                    vec![(Type::Long, Value::global("fmt_int")), (Type::Word, v)],
                     Some(1),
                 ));
                 func.add_instr(Instr::Jmp(next_label.to_string()));
@@ -502,10 +505,10 @@ impl Codegen {
 
         main.add_block("entry");
         for v in &vars {
-            main.assign_instr(Value::Temporary(v.clone()), Type::Long, Instr::Alloc4(4));
+            main.assign_instr(v.clone(), Type::Long, Instr::Alloc4(4));
             main.add_instr(Instr::Store(
                 Type::Word,
-                Value::Temporary(v.clone()),
+                Value::temporary(v),
                 Value::Const(0),
             ));
         }

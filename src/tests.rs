@@ -12,10 +12,15 @@ use std::sync::Arc;
 
 #[test]
 fn qbe_value() {
-    let val = Value::Temporary("temp42".into());
+    let val = Value::Temporary(Temporary("temp42".into()));
+    assert_eq!(format!("{val}"), "%temp42");
+    let val = Value::temporary("temp42");
     assert_eq!(format!("{val}"), "%temp42");
 
-    let val = Value::Global("main".into());
+    let val = Value::Global(Global("main".into()));
+    assert_eq!(format!("{val}"), "$main");
+
+    let val = Value::global("main");
     assert_eq!(format!("{val}"), "$main");
 
     let val = Value::Const(1337);
@@ -39,12 +44,12 @@ fn block() {
         items: vec![
             BlockItem::Comment("Comment".into()),
             BlockItem::Statement(Statement::Assign(
-                Value::Temporary("foo".into()),
+                Temporary("foo".into()),
                 Type::Word,
                 Instr::Add(Value::Const(2), Value::Const(2)),
             )),
-            BlockItem::Statement(Statement::Volatile(Instr::Ret(Some(Value::Temporary(
-                "foo".into(),
+            BlockItem::Statement(Statement::Volatile(Instr::Ret(Some(Value::temporary(
+                "foo",
             ))))),
         ],
     };
@@ -62,8 +67,8 @@ fn instr_blit() {
     let blk = Block {
         label: "start".into(),
         items: vec![BlockItem::Statement(Statement::Volatile(Instr::Blit(
-            Value::Temporary("src".into()),
-            Value::Temporary("dst".into()),
+            Value::temporary("src"),
+            Value::temporary("dst"),
             4,
         )))],
     };
@@ -393,7 +398,7 @@ fn variadic_call() {
     let instr = Instr::Call(
         "printf".into(),
         vec![
-            (Type::Long, Value::Global("fmt".into())),
+            (Type::Long, Value::global("fmt")),
             (Type::Word, Value::Const(0)),
         ],
         Some(1),
@@ -463,16 +468,16 @@ fn comparison_types() {
     let ordered_cmp = Statement::Volatile(Instr::Cmp(
         Type::Double,
         Cmp::O,
-        Value::Temporary("a".into()),
-        Value::Temporary("b".into()),
+        Value::temporary("a"),
+        Value::temporary("b"),
     ));
     assert_eq!(format!("{ordered_cmp}"), "cod %a, %b");
 
     let unordered_cmp = Statement::Volatile(Instr::Cmp(
         Type::Single,
         Cmp::Uo,
-        Value::Temporary("a".into()),
-        Value::Temporary("b".into()),
+        Value::temporary("a"),
+        Value::temporary("b"),
     ));
     assert_eq!(format!("{unordered_cmp}"), "cuos %a, %b");
 
@@ -480,32 +485,32 @@ fn comparison_types() {
     let unsigned_lt = Statement::Volatile(Instr::Cmp(
         Type::Word,
         Cmp::Ult,
-        Value::Temporary("a".into()),
-        Value::Temporary("b".into()),
+        Value::temporary("a"),
+        Value::temporary("b"),
     ));
     assert_eq!(format!("{unsigned_lt}"), "cultw %a, %b");
 
     let unsigned_le = Statement::Volatile(Instr::Cmp(
         Type::Long,
         Cmp::Ule,
-        Value::Temporary("a".into()),
-        Value::Temporary("b".into()),
+        Value::temporary("a"),
+        Value::temporary("b"),
     ));
     assert_eq!(format!("{unsigned_le}"), "culel %a, %b");
 
     let unsigned_gt = Statement::Volatile(Instr::Cmp(
         Type::Word,
         Cmp::Ugt,
-        Value::Temporary("a".into()),
-        Value::Temporary("b".into()),
+        Value::temporary("a"),
+        Value::temporary("b"),
     ));
     assert_eq!(format!("{unsigned_gt}"), "cugtw %a, %b");
 
     let unsigned_ge = Statement::Volatile(Instr::Cmp(
         Type::Long,
         Cmp::Uge,
-        Value::Temporary("a".into()),
-        Value::Temporary("b".into()),
+        Value::temporary("a"),
+        Value::temporary("b"),
     ));
     assert_eq!(format!("{unsigned_ge}"), "cugel %a, %b");
 }
@@ -513,16 +518,16 @@ fn comparison_types() {
 #[test]
 fn unsigned_arithmetic_instructions() {
     let udiv = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Udiv(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Udiv(Value::temporary("a"), Value::temporary("b")),
     );
     assert_eq!(format!("{udiv}"), "%result =w udiv %a, %b");
 
     let urem = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Long,
-        Instr::Urem(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Urem(Value::temporary("a"), Value::temporary("b")),
     );
     assert_eq!(format!("{urem}"), "%result =l urem %a, %b");
 }
@@ -530,23 +535,23 @@ fn unsigned_arithmetic_instructions() {
 #[test]
 fn shift_instructions() {
     let sar = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Sar(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Sar(Value::temporary("a"), Value::temporary("b")),
     );
     assert_eq!(format!("{sar}"), "%result =w sar %a, %b");
 
     let shr = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Long,
-        Instr::Shr(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Shr(Value::temporary("a"), Value::temporary("b")),
     );
     assert_eq!(format!("{shr}"), "%result =l shr %a, %b");
 
     let shl = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Shl(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Shl(Value::temporary("a"), Value::temporary("b")),
     );
     assert_eq!(format!("{shl}"), "%result =w shl %a, %b");
 }
@@ -554,16 +559,16 @@ fn shift_instructions() {
 #[test]
 fn cast_instruction() {
     let cast_int_to_float = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Single,
-        Instr::Cast(Value::Temporary("a".into())),
+        Instr::Cast(Value::temporary("a")),
     );
     assert_eq!(format!("{cast_int_to_float}"), "%result =s cast %a");
 
     let cast_float_to_int = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Cast(Value::Temporary("f".into())),
+        Instr::Cast(Value::temporary("f")),
     );
     assert_eq!(format!("{cast_float_to_int}"), "%result =w cast %f");
 }
@@ -571,44 +576,44 @@ fn cast_instruction() {
 #[test]
 fn extension_operations() {
     let extsw = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Long,
-        Instr::Extsw(Value::Temporary("a".into())),
+        Instr::Extsw(Value::temporary("a")),
     );
     assert_eq!(format!("{extsw}"), "%result =l extsw %a");
 
     let extuw = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Long,
-        Instr::Extuw(Value::Temporary("a".into())),
+        Instr::Extuw(Value::temporary("a")),
     );
     assert_eq!(format!("{extuw}"), "%result =l extuw %a");
 
     let extsh = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Extsh(Value::Temporary("a".into())),
+        Instr::Extsh(Value::temporary("a")),
     );
     assert_eq!(format!("{extsh}"), "%result =w extsh %a");
 
     let extuh = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Extuh(Value::Temporary("a".into())),
+        Instr::Extuh(Value::temporary("a")),
     );
     assert_eq!(format!("{extuh}"), "%result =w extuh %a");
 
     let extsb = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Extsb(Value::Temporary("a".into())),
+        Instr::Extsb(Value::temporary("a")),
     );
     assert_eq!(format!("{extsb}"), "%result =w extsb %a");
 
     let extub = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Extub(Value::Temporary("a".into())),
+        Instr::Extub(Value::temporary("a")),
     );
     assert_eq!(format!("{extub}"), "%result =w extub %a");
 }
@@ -616,16 +621,16 @@ fn extension_operations() {
 #[test]
 fn float_precision_conversion() {
     let exts = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Double,
-        Instr::Exts(Value::Temporary("a".into())),
+        Instr::Exts(Value::temporary("a")),
     );
     assert_eq!(format!("{exts}"), "%result =d exts %a");
 
     let truncd = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Single,
-        Instr::Truncd(Value::Temporary("a".into())),
+        Instr::Truncd(Value::temporary("a")),
     );
     assert_eq!(format!("{truncd}"), "%result =s truncd %a");
 }
@@ -633,71 +638,71 @@ fn float_precision_conversion() {
 #[test]
 fn float_integer_conversions() {
     let stosi = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Stosi(Value::Temporary("a".into())),
+        Instr::Stosi(Value::temporary("a")),
     );
     assert_eq!(format!("{stosi}"), "%result =w stosi %a");
 
     let stoui = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
-        Instr::Stoui(Value::Temporary("a".into())),
+        Instr::Stoui(Value::temporary("a")),
     );
     assert_eq!(format!("{stoui}"), "%result =w stoui %a");
 
     let dtosi = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Long,
-        Instr::Dtosi(Value::Temporary("a".into())),
+        Instr::Dtosi(Value::temporary("a")),
     );
     assert_eq!(format!("{dtosi}"), "%result =l dtosi %a");
 
     let dtoui = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Long,
-        Instr::Dtoui(Value::Temporary("a".into())),
+        Instr::Dtoui(Value::temporary("a")),
     );
     assert_eq!(format!("{dtoui}"), "%result =l dtoui %a");
 
     let swtof = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Single,
-        Instr::Swtof(Value::Temporary("a".into())),
+        Instr::Swtof(Value::temporary("a")),
     );
     assert_eq!(format!("{swtof}"), "%result =s swtof %a");
 
     let uwtof = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Single,
-        Instr::Uwtof(Value::Temporary("a".into())),
+        Instr::Uwtof(Value::temporary("a")),
     );
     assert_eq!(format!("{uwtof}"), "%result =s uwtof %a");
 
     let sltof = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Double,
-        Instr::Sltof(Value::Temporary("a".into())),
+        Instr::Sltof(Value::temporary("a")),
     );
     assert_eq!(format!("{sltof}"), "%result =d sltof %a");
 
     let ultof = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Double,
-        Instr::Ultof(Value::Temporary("a".into())),
+        Instr::Ultof(Value::temporary("a")),
     );
     assert_eq!(format!("{ultof}"), "%result =d ultof %a");
 }
 
 #[test]
 fn variadic_instructions() {
-    let vastart = Statement::Volatile(Instr::Vastart(Value::Temporary("ap".into())));
+    let vastart = Statement::Volatile(Instr::Vastart(Value::temporary("ap")));
     assert_eq!(format!("{vastart}"), "vastart %ap");
 
     let vaarg = Statement::Assign(
-        Value::Temporary("arg".into()),
+        Temporary("arg".into()),
         Type::Word,
-        Instr::Vaarg(Type::Word, Value::Temporary("ap".into())),
+        Instr::Vaarg(Type::Word, Value::temporary("ap")),
     );
     assert_eq!(format!("{vaarg}"), "%arg =w vaargw %ap");
 }
@@ -706,16 +711,16 @@ fn variadic_instructions() {
 fn phi_instruction() {
     let phi = Instr::Phi(vec![
         ("ift".into(), Value::Const(2)),
-        ("iff".into(), Value::Temporary("3".into())),
+        ("iff".into(), Value::temporary("3")),
     ]);
     assert_eq!(format!("{phi}"), "phi @ift 2, @iff %3");
 
     let phi = Statement::Assign(
-        Value::Temporary("result".into()),
+        Temporary("result".into()),
         Type::Word,
         Instr::Phi(vec![
-            ("start".into(), Value::Temporary("1".into())),
-            ("loop".into(), Value::Global("tmp".into())),
+            ("start".into(), Value::temporary("1")),
+            ("loop".into(), Value::global("tmp")),
         ]),
     );
     assert_eq!(format!("{phi}"), "%result =w phi @start %1, @loop $tmp");
@@ -728,12 +733,12 @@ fn phi_instruction() {
     assert_eq!(format!("{phi}"), "phi @case1 10, @case2 20, @case3 30");
 
     let phi = Statement::Assign(
-        Value::Temporary("merged".into()),
+        Temporary("merged".to_string()),
         Type::Long,
         Instr::Phi(vec![
-            ("path_a".into(), Value::Temporary("x".into())),
-            ("path_b".into(), Value::Temporary("y".into())),
-            ("path_c".into(), Value::Global("global_val".into())),
+            ("path_a".into(), Value::temporary("x")),
+            ("path_b".into(), Value::temporary("y")),
+            ("path_c".into(), Value::global("global_val")),
             ("path_d".into(), Value::Const(42)),
         ]),
     );
@@ -814,34 +819,34 @@ fn complex_block_with_multiple_instructions() {
 
     // Add unsigned division
     block.assign_instr(
-        Value::Temporary("udiv_result".into()),
+        "udiv_result",
         Type::Word,
-        Instr::Udiv(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Udiv(Value::temporary("a"), Value::temporary("b")),
     );
 
     // Add a shift operation
     block.assign_instr(
-        Value::Temporary("shift_result".into()),
+        "shift_result",
         Type::Word,
-        Instr::Shl(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Shl(Value::temporary("a"), Value::temporary("b")),
     );
 
     // Add a cast operation
     block.assign_instr(
-        Value::Temporary("cast_result".into()),
+        "cast_result",
         Type::Single,
-        Instr::Cast(Value::Temporary("shift_result".into())),
+        Instr::Cast(Value::temporary("shift_result")),
     );
 
     // Add a comparison (unordered)
     block.assign_instr(
-        Value::Temporary("cmp_result".into()),
+        "cmp_result",
         Type::Word,
         Instr::Cmp(
             Type::Single,
             Cmp::Uo,
-            Value::Temporary("cast_result".into()),
-            Value::Temporary("x".into()),
+            Value::temporary("cast_result"),
+            Value::temporary("x"),
         ),
     );
 
@@ -874,13 +879,13 @@ fn assign_instr_aggregate_type_coercion() {
     });
 
     block.assign_instr(
-        Value::Temporary("human".into()),
+        "human",
         Type::aggregate(&typedef),
         Instr::Alloc8(Type::aggregate(&typedef).size()),
     );
 
     block.assign_instr(
-        Value::Temporary("result".into()),
+        "result",
         Type::aggregate(&typedef),
         Instr::Call("new_person".into(), vec![], None),
     );
@@ -895,7 +900,7 @@ fn assign_instr_aggregate_type_coercion() {
 
 #[test]
 fn load_valid_types() {
-    let src = Value::Temporary("addr".into());
+    let src = Value::temporary("addr");
     assert_eq!(
         format!("{}", Instr::Load(Type::SignedByte, src.clone())),
         "loadsb %addr"
@@ -933,21 +938,21 @@ fn load_valid_types() {
 #[test]
 #[should_panic(expected = "ambiguous sub-word load")]
 fn load_byte_panics() {
-    let src = Value::Temporary("addr".into());
+    let src = Value::temporary("addr");
     let _ = format!("{}", Instr::Load(Type::Byte, src));
 }
 
 #[test]
 #[should_panic(expected = "ambiguous sub-word load")]
 fn load_halfword_panics() {
-    let src = Value::Temporary("addr".into());
+    let src = Value::temporary("addr");
     let _ = format!("{}", Instr::Load(Type::Halfword, src));
 }
 
 #[test]
 fn store_valid_types() {
-    let dest = Value::Temporary("addr".into());
-    let val = Value::Temporary("val".into());
+    let dest = Value::temporary("addr");
+    let val = Value::temporary("val");
     assert_eq!(
         format!("{}", Instr::Store(Type::Byte, dest.clone(), val.clone())),
         "storeb %val, %addr"
