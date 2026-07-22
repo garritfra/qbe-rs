@@ -7,8 +7,8 @@ fn generate_add_func(module: &mut Module) {
         Linkage::private(),
         "add",
         vec![
-            (Type::Word, Value::Temporary("a".into())),
-            (Type::Word, Value::Temporary("b".into())),
+            (Type::Word, Value::temporary("a")),
+            (Type::Word, Value::temporary("b")),
         ],
         Some(Type::Word),
     );
@@ -17,9 +17,9 @@ fn generate_add_func(module: &mut Module) {
     func.assign_instr(
         "c",
         Type::Word,
-        Instr::Add(Value::Temporary("a".into()), Value::Temporary("b".into())),
+        Instr::Add(Value::temporary("a"), Value::temporary("b")),
     );
-    func.add_instr(Instr::Ret(Some(Value::Temporary("c".into()))));
+    func.add_instr(Instr::Ret(Some(Value::temporary("c"))));
 
     module.add_function(func);
 }
@@ -40,8 +40,8 @@ fn generate_main_func(module: &mut Module) {
     func.add_instr(Instr::Call(
         "printf".into(),
         vec![
-            (Type::Long, Value::Global("fmt".into())),
-            (Type::Word, Value::Temporary("r".into())),
+            (Type::Long, Value::global("fmt")),
+            (Type::Word, Value::temporary("r")),
         ],
         Some(1),
     ));

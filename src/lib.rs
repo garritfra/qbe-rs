@@ -28,8 +28,8 @@
 //!     Linkage::public(),
 //!     "add",
 //!     vec![
-//!         (Type::Word, Value::Temporary("a".to_string())),
-//!         (Type::Word, Value::Temporary("b".to_string())),
+//!         (Type::Word, Value::temporary("a")),
+//!         (Type::Word, Value::temporary("b")),
 //!     ],
 //!     Some(Type::Word),
 //! );
@@ -42,13 +42,13 @@
 //!     "sum",
 //!     Type::Word,
 //!     Instr::Add(
-//!         Value::Temporary("a".to_string()),
-//!         Value::Temporary("b".to_string()),
+//!         Value::temporary("a"),
+//!         Value::temporary("b"),
 //!     ),
 //! );
 //!
 //! // Return the sum
-//! block.add_instr(Instr::Ret(Some(Value::Temporary("sum".to_string()))));
+//! block.add_instr(Instr::Ret(Some(Value::temporary("sum"))));
 //!
 //! // Add the function to the module
 //! module.add_function(func);
@@ -85,15 +85,15 @@ mod tests;
 /// let slt_instr = Instr::Cmp(
 ///     Type::Word,
 ///     Cmp::Slt,
-///     Value::Temporary("a".to_string()),
-///     Value::Temporary("b".to_string()),
+///     Value::temporary("a"),
+///     Value::temporary("b"),
 /// );
 ///
 /// // Check if two values are equal
 /// let eq_instr = Instr::Cmp(
 ///     Type::Word,
 ///     Cmp::Eq,
-///     Value::Temporary("x".to_string()),
+///     Value::temporary("x"),
 ///     Value::Const(0),
 /// );
 /// ```
@@ -135,13 +135,13 @@ pub enum Cmp {
 ///
 /// // Addition: %result = %a + %b
 /// let add = Instr::Add(
-///     Value::Temporary("a".to_string()),
-///     Value::Temporary("b".to_string()),
+///     Value::temporary("a"),
+///     Value::temporary("b"),
 /// );
 ///
 /// // Multiplication: %result = %x * 5
 /// let mul = Instr::Mul(
-///     Value::Temporary("x".to_string()),
+///     Value::temporary("x"),
 ///     Value::Const(5),
 /// );
 /// ```
@@ -156,14 +156,14 @@ pub enum Cmp {
 /// // Store a word to memory: store %value, %ptr
 /// let store = Instr::Store(
 ///     Type::Word,
-///     Value::Temporary("ptr".to_string()),
-///     Value::Temporary("value".to_string()),
+///     Value::temporary("ptr"),
+///     Value::temporary("value"),
 /// );
 ///
 /// // Load a word from memory: %result = load %ptr
 /// let load = Instr::Load(
 ///     Type::Word,
-///     Value::Temporary("ptr".to_string()),
+///     Value::temporary("ptr"),
 /// );
 /// ```
 ///
@@ -173,13 +173,13 @@ pub enum Cmp {
 ///
 /// // Conditional jump based on %condition
 /// let branch = Instr::Jnz(
-///     Value::Temporary("condition".to_string()),
+///     Value::temporary("condition"),
 ///     "true_branch".to_string(),
 ///     "false_branch".to_string(),
 /// );
 ///
 /// // Return a value from a function
-/// let ret = Instr::Ret(Some(Value::Temporary("result".to_string())));
+/// let ret = Instr::Ret(Some(Value::temporary("result")));
 /// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Instr {
@@ -689,16 +689,44 @@ impl fmt::Display for Type {
         }
     }
 }
+/// QBE temporary
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct Temporary(String);
+
+impl fmt::Display for Temporary {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "%{}", self.0)
+    }
+}
+
+/// QBE global
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct Global(String);
+
+impl fmt::Display for Global {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "${}", self.0)
+    }
+}
 
 /// QBE value that is accepted by instructions
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Value {
     /// `%`-temporary
-    Temporary(String),
+    Temporary(Temporary),
     /// `$`-global
-    Global(String),
+    Global(Global),
     /// Constant
     Const(u64),
+}
+
+impl Value {
+    pub fn temporary(name: impl Into<String>) -> Value {
+        Value::Temporary(Temporary(name.into()))
+    }
+    pub fn global(name: impl Into<String>) -> Value {
+        Value::Global(Global(name.into()))
+    }
 }
 
 impl From<u64> for Value {
@@ -710,8 +738,8 @@ impl From<u64> for Value {
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Temporary(name) => write!(f, "%{name}"),
-            Self::Global(name) => write!(f, "${name}"),
+            Self::Temporary(name) => write!(f, "{name}"),
+            Self::Global(name) => write!(f, "{name}"),
             Self::Const(value) => write!(f, "{value}"),
         }
     }
@@ -867,7 +895,7 @@ impl fmt::Display for TypeDef {
 /// An IR statement
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Statement {
-    Assign(String, Type, Instr),
+    Assign(Temporary, Type, Instr),
     Volatile(Instr),
 }
 
@@ -875,7 +903,7 @@ impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Assign(temp, ty, instr) => {
-                write!(f, "%{temp} ={ty} {instr}")
+                write!(f, "{temp} ={ty} {instr}")
             }
             Self::Volatile(instr) => write!(f, "{instr}"),
         }
@@ -907,7 +935,7 @@ impl fmt::Display for Statement {
 ///     "i",
 ///     Type::Word,
 ///     Instr::Add(
-///         Value::Temporary("i".to_string()),
+///         Value::temporary("i"),
 ///         Value::Const(1),
 ///     ),
 /// );
@@ -917,8 +945,8 @@ impl fmt::Display for Statement {
 ///     "sum",
 ///     Type::Word,
 ///     Instr::Add(
-///         Value::Temporary("sum".to_string()),
-///         Value::Temporary("value".to_string()),
+///         Value::temporary("sum"),
+///         Value::temporary("value"),
 ///     ),
 /// );
 ///
@@ -972,7 +1000,7 @@ impl Block {
         };
 
         self.items.push(BlockItem::Statement(Statement::Assign(
-            temp.into(),
+            Temporary(temp.into()),
             final_type,
             instr,
         )));
@@ -1020,7 +1048,7 @@ impl fmt::Display for Block {
 /// let mut is_even = Function::new(
 ///     Linkage::public(),
 ///     "is_even",
-///     vec![(Type::Word, Value::Temporary("n".to_string()))],
+///     vec![(Type::Word, Value::temporary("n"))],
 ///     Some(Type::Word), // Returns 1 if even, 0 if odd
 /// );
 ///
@@ -1032,7 +1060,7 @@ impl fmt::Display for Block {
 ///     "remainder",
 ///     Type::Word,
 ///     Instr::And(
-///         Value::Temporary("n".to_string()),
+///         Value::temporary("n"),
 ///         Value::Const(1),
 ///     ),
 /// );
@@ -1044,13 +1072,13 @@ impl fmt::Display for Block {
 ///     Instr::Cmp(
 ///         Type::Word,
 ///         Cmp::Eq,
-///         Value::Temporary("remainder".to_string()),
+///         Value::temporary("remainder"),
 ///         Value::Const(0),
 ///     ),
 /// );
 ///
 /// // Return the result
-/// start.add_instr(Instr::Ret(Some(Value::Temporary("is_zero".to_string()))));
+/// start.add_instr(Instr::Ret(Some(Value::temporary("is_zero"))));
 /// ```
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Function {
@@ -1308,7 +1336,7 @@ impl fmt::Display for Linkage {
 ///     Type::Word,
 ///     Instr::Call(
 ///         "printf".to_string(),
-///         vec![(Type::Long, Value::Global("hello".to_string()))],
+///         vec![(Type::Long, Value::global("hello"))],
 ///         None,
 ///     ),
 /// );

@@ -395,13 +395,13 @@ impl Codegen {
     }
 
     fn fresh_temp(&mut self) -> Value {
-        let v = Value::Temporary(format!("t{}", self.next_temp));
+        let v = Value::temporary(&format!("t{}", self.next_temp));
         self.next_temp += 1;
         v
     }
     fn fresh_temp_with_name(&mut self) -> (Value, String) {
         let name = format!("t{}", self.next_temp);
-        let v = Value::Temporary(name.clone());
+        let v = Value::temporary(name.as_str());
         self.next_temp += 1;
         (v, name)
     }
@@ -414,7 +414,7 @@ impl Codegen {
                 func.assign_instr(
                     destname,
                     Type::Word,
-                    Instr::Load(Type::Word, Value::Temporary(name.clone())),
+                    Instr::Load(Type::Word, Value::temporary(name.as_str())),
                 );
                 dest
             }
@@ -449,17 +449,14 @@ impl Codegen {
         match stmt {
             Stmt::Let(name, e) => {
                 let v = self.lower_expr(func, e);
-                func.add_instr(Instr::Store(Type::Word, Value::Temporary(name.clone()), v));
+                func.add_instr(Instr::Store(Type::Word, Value::temporary(name.as_str()), v));
                 func.add_instr(Instr::Jmp(next_label.to_string()));
             }
             Stmt::Print(e) => {
                 let v = self.lower_expr(func, e);
                 func.add_instr(Instr::Call(
                     "printf".to_string(),
-                    vec![
-                        (Type::Long, Value::Global("fmt_int".to_string())),
-                        (Type::Word, v),
-                    ],
+                    vec![(Type::Long, Value::global("fmt_int")), (Type::Word, v)],
                     Some(1),
                 ));
                 func.add_instr(Instr::Jmp(next_label.to_string()));
@@ -511,7 +508,7 @@ impl Codegen {
             main.assign_instr(v.clone(), Type::Long, Instr::Alloc4(4));
             main.add_instr(Instr::Store(
                 Type::Word,
-                Value::Temporary(v.clone()),
+                Value::temporary(v),
                 Value::Const(0),
             ));
         }
