@@ -689,7 +689,7 @@ impl fmt::Display for Type {
         }
     }
 }
-/// QBE temporary
+/// QBE %temporary
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Temporary(String);
 
@@ -699,7 +699,7 @@ impl fmt::Display for Temporary {
     }
 }
 
-/// QBE global
+/// QBE $global
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Global(String);
 
