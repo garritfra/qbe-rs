@@ -718,6 +718,12 @@ pub enum Value {
     Global(Global),
     /// Constant
     Const(u64),
+    /// External global constant
+    Extern(Global),
+    /// Thread-local global constant
+    Thread(Global),
+    /// External thread-local global constant
+    ExternThread(Global),
 }
 
 impl Value {
@@ -726,6 +732,15 @@ impl Value {
     }
     pub fn global(name: impl Into<String>) -> Value {
         Value::Global(Global(name.into()))
+    }
+    pub fn external(name: impl Into<String>) -> Value {
+        Value::Extern(Global(name.into()))
+    }
+    pub fn threadlocal(name: impl Into<String>) -> Value {
+        Value::Thread(Global(name.into()))
+    }
+    pub fn external_threadlocal(name: impl Into<String>) -> Value {
+        Value::ExternThread(Global(name.into()))
     }
 }
 
@@ -741,6 +756,9 @@ impl fmt::Display for Value {
             Self::Temporary(name) => write!(f, "{name}"),
             Self::Global(name) => write!(f, "{name}"),
             Self::Const(value) => write!(f, "{value}"),
+            Self::Extern(global) => write!(f, "extern {global}"),
+            Self::Thread(global) => write!(f, "thread {global}"),
+            Self::ExternThread(global) => write!(f, "extern thread {global}"),
         }
     }
 }

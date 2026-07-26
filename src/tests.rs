@@ -25,6 +25,15 @@ fn qbe_value() {
 
     let val = Value::Const(1337);
     assert_eq!(format!("{val}"), "1337");
+
+    let val = Value::external("var");
+    assert_eq!(format!("{val}"), "extern $var");
+
+    let val = Value::threadlocal("var");
+    assert_eq!(format!("{val}"), "thread $var");
+
+    let val = Value::external_threadlocal("var");
+    assert_eq!(format!("{val}"), "extern thread $var");
 }
 
 #[test]
@@ -692,6 +701,78 @@ fn float_integer_conversions() {
         Instr::Ultof(Value::temporary("a")),
     );
     assert_eq!(format!("{ultof}"), "%result =d ultof %a");
+}
+
+#[test]
+fn dynconsts_as_operands() {
+    let load_extern = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Load(Type::Long, Value::external("b")),
+    );
+    assert_eq!(format!("{load_extern}"), "%result =l loadl extern $b");
+
+    let load_thread = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Load(Type::Long, Value::threadlocal("b")),
+    );
+    assert_eq!(format!("{load_thread}"), "%result =l loadl thread $b");
+
+    let load_extern_thread = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Load(Type::Long, Value::external_threadlocal("b")),
+    );
+    assert_eq!(
+        format!("{load_extern_thread}"),
+        "%result =l loadl extern thread $b"
+    );
+
+    let add_extern = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Add(Value::external("b"), Value::temporary("a")),
+    );
+    assert_eq!(format!("{add_extern}"), "%result =l add extern $b, %a");
+    let add_extern = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Add(Value::temporary("a"), Value::external("b")),
+    );
+    assert_eq!(format!("{add_extern}"), "%result =l add %a, extern $b");
+
+    let add_thread = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Add(Value::threadlocal("b"), Value::temporary("a")),
+    );
+    assert_eq!(format!("{add_thread}"), "%result =l add thread $b, %a");
+    let add_thread = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Add(Value::temporary("a"), Value::threadlocal("b")),
+    );
+    assert_eq!(format!("{add_thread}"), "%result =l add %a, thread $b");
+
+    let add_extern_thread = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Add(Value::external_threadlocal("b"), Value::temporary("a")),
+    );
+    assert_eq!(
+        format!("{add_extern_thread}"),
+        "%result =l add extern thread $b, %a"
+    );
+    let add_extern_thread = Statement::Assign(
+        Temporary("result".into()),
+        Type::Long,
+        Instr::Add(Value::temporary("a"), Value::external_threadlocal("b")),
+    );
+    assert_eq!(
+        format!("{add_extern_thread}"),
+        "%result =l add %a, extern thread $b"
+    );
 }
 
 #[test]
