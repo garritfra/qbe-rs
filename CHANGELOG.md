@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
   end-to-end source-to-IL pipeline (lexer, parser, codegen). Closes
   [#9](https://github.com/garritfra/qbe-rs/issues/9)
   ([#60](https://github.com/garritfra/qbe-rs/pull/60)).
+- `Extern`, `Thread` and `ExternThread` variants for `Value` to support QBE 1.3' `DynConst`'s'
 
 ## [4.0.0] - 2026-03-23
 
