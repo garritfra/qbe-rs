@@ -14,14 +14,17 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- The new `Temporary` and `Global` types wrap a `String`
-- `Value` provides a `temporary` convenience constructor
-- `Value` provides a `global` convenience constructor
 - New example `tiny_basic`: a BASIC-subset compiler that demonstrates an
   end-to-end source-to-IL pipeline (lexer, parser, codegen). Closes
   [#9](https://github.com/garritfra/qbe-rs/issues/9)
   ([#60](https://github.com/garritfra/qbe-rs/pull/60)).
+- The new `Temporary` and `Global` types wrap a `String`
+- `Value` provides a `temporary` convenience constructor
+- `Value` provides a `global` convenience constructor
 - `Extern`, `Thread` and `ExternThread` variants for `Value` to support QBE 1.3' `DynConst`'s'
+- `Value` provides a `external` convenience constructor
+- `Value` provides a `threadlocal` convenience constructor
+- `Value` provides a `external_threadlocal` convenience constructor
 
 ## [4.0.0] - 2026-03-23
 
