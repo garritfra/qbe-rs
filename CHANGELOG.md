@@ -10,9 +10,11 @@ All notable changes to this project will be documented in this file.
 - BREAKING: `Value::Global` now holds a `Global(String)` instead of a `String`
 - BREAKING: `Statement::Assign`'s first type is now a `Temporary` instead of a `Value`
 - BREAKING: `Block::assign_instr`'s first argument is now `impl Into<String>` instead of `Value`
+- BREAKING `DataDef` now holds a `Global` as its name, changed from a `String`
 
 ### Added
 
+- The new `Temporary` and `Global` types wrap a `String`
 - `Value` provides a `temporary` convenience constructor
 - `Value` provides a `global` convenience constructor
 - New example `tiny_basic`: a BASIC-subset compiler that demonstrates an

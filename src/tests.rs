@@ -119,7 +119,7 @@ fn function_new_equivalence() {
 fn datadef() {
     let datadef = DataDef {
         linkage: Linkage::public(),
-        name: "hello".into(),
+        name: Global("hello".into()),
         align: None,
         items: vec![
             (Type::Byte, DataItem::Str("Hello, World!".into())),
@@ -138,7 +138,7 @@ fn datadef() {
 fn datadef_new_equivalence() {
     let datadef1 = DataDef {
         linkage: Linkage::public(),
-        name: "hello".into(),
+        name: Global("hello".into()),
         align: None,
         items: vec![],
     };
@@ -771,7 +771,7 @@ fn thread_local_linkage() {
     // Test in a data definition
     let data_def = DataDef {
         linkage: Linkage::thread_local(),
-        name: "thread_var".into(),
+        name: Global("thread_var".into()),
         align: None,
         items: vec![(Type::Word, DataItem::Const(42))],
     };
@@ -786,7 +786,7 @@ fn zero_initialized_data() {
     // Test in a data definition
     let data_def = DataDef {
         linkage: Linkage::private(),
-        name: "zero_array".into(),
+        name: Global("zero_array".into()),
         align: None,
         items: vec![(Type::Byte, DataItem::Zero(1000))],
     };
@@ -795,7 +795,7 @@ fn zero_initialized_data() {
     // Test mixed with other items
     let data_def = DataDef {
         linkage: Linkage::private(),
-        name: "mixed_data".into(),
+        name: Global("mixed_data".into()),
         align: None,
         items: vec![
             (Type::Word, DataItem::Const(1)),

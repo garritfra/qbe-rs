@@ -700,7 +700,7 @@ impl fmt::Display for Temporary {
 }
 
 /// QBE $global
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Global(String);
 
 impl fmt::Display for Global {
@@ -749,7 +749,7 @@ impl fmt::Display for Value {
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct DataDef {
     pub linkage: Linkage,
-    pub name: String,
+    pub name: Global,
     pub align: Option<u64>,
     pub items: Vec<(Type, DataItem)>,
 }
@@ -763,7 +763,7 @@ impl DataDef {
     ) -> Self {
         Self {
             linkage,
-            name: name.into(),
+            name: Global(name.into()),
             align,
             items,
         }
@@ -772,7 +772,7 @@ impl DataDef {
 
 impl fmt::Display for DataDef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}data ${} = ", self.linkage, self.name)?;
+        write!(f, "{}data {} = ", self.linkage, self.name)?;
 
         if let Some(align) = self.align {
             write!(f, "align {align} ")?;
