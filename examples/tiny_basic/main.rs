@@ -394,11 +394,6 @@ impl Codegen {
         }
     }
 
-    fn fresh_temp(&mut self) -> Value {
-        let v = Value::temporary(&format!("t{}", self.next_temp));
-        self.next_temp += 1;
-        v
-    }
     fn fresh_temp_with_name(&mut self) -> (Value, String) {
         let name = format!("t{}", self.next_temp);
         let v = Value::temporary(name.as_str());
